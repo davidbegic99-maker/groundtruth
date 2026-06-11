@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-i18n-title="title.analyst">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/vendor/leaflet.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <title>GroundTruth — Analyst Dashboard</title>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◬</span>
+      <div>
+        <div class="brand-name">GroundTruth</div>
+        <div class="brand-view" data-i18n="nav.analystView">Analyst View</div>
+      </div>
+    </div>
+    <div class="app-bar-right">
+      <span id="net-indicator" class="net-indicator">…</span>
+      <span class="visually-hidden" data-i18n="lang.label">Language</span>
+      <select id="lang-select" data-i18n-attr="aria-label:lang.label"></select>
+    </div>
+  </header>
+
+  <div id="net-banner" class="net-banner" hidden></div>
+
+  <main class="analyst-main">
+    <!-- Two-tier view toggle (briefing §13): public aggregate vs analyst records -->
+    <div class="analyst-toolbar">
+      <div class="seg" role="tablist">
+        <button id="tab-public" class="seg-btn active" role="tab" data-i18n="a.publicTab">Public overview</button>
+        <button id="tab-analyst" class="seg-btn" role="tab" data-i18n="a.analystTab">Analyst records</button>
+      </div>
+      <div class="analyst-layers">
+        <label class="chk"><input type="checkbox" id="toggle-heatmap" /><span data-i18n="a.heatmap">Heatmap</span></label>
+        <label class="chk"><input type="checkbox" id="toggle-coverage" /><span data-i18n="a.coverage">Coverage gaps</span></label>
+      </div>
+    </div>
+
+    <div id="analyst-map" class="analyst-map" role="application" aria-label="map"></div>
+
+    <div class="map-legend">
+      <span class="lg"><i class="dot dot-min"></i><span data-i18n="damage.minimal">Minimal</span></span>
+      <span class="lg"><i class="dot dot-par"></i><span data-i18n="damage.partial">Partial</span></span>
+      <span class="lg"><i class="dot dot-com"></i><span data-i18n="damage.complete">Complete</span></span>
+      <span id="view-counter" class="view-counter"></span>
+    </div>
+
+    <!-- PUBLIC tier: aggregate-only, no individual data -->
+    <section id="public-info" class="card">
+      <p class="intro" data-i18n="a.publicHint"></p>
+    </section>
+
+    <!-- ANALYST tier: login gate -->
+    <section id="analyst-login" class="card" hidden>
+      <h2 data-i18n="a.login.title">Analyst access</h2>
+      <p class="intro" data-i18n="a.login.body"></p>
+      <label class="field">
+        <span data-i18n="a.login.label">Access key</span>
+        <input type="password" id="analyst-key-input" autocomplete="off"
+               data-i18n-attr="placeholder:a.login.placeholder" />
+      </label>
+      <p class="loc-hint" data-i18n="a.login.hint"></p>
+      <p id="login-error" class="login-error" hidden data-i18n="a.login.error"></p>
+      <button class="btn btn-primary btn-block" id="btn-unlock" data-i18n="a.login.button">Unlock</button>
+    </section>
+
+    <!-- ANALYST tier: filters + records + detail -->
+    <section id="analyst-panel" hidden>
+      <div class="card filters">
+        <div class="filters-head">
+          <h2 data-i18n="a.filters">Filters</h2>
+          <button class="btn btn-text" id="btn-clear-filters" data-i18n="a.filter.clear">Clear</button>
+        </div>
+        <div class="filter-grid">
+          <label class="field"><span data-i18n="a.filter.damage">Damage</span><select id="f-damage"></select></label>
+          <label class="field"><span data-i18n="a.filter.hazard">Hazard</span><select id="f-hazard"></select></label>
+          <label class="field"><span data-i18n="a.filter.infra">Building type</span><select id="f-infra"></select></label>
+          <label class="field"><span data-i18n="a.filter.from">From</span><input type="datetime-local" id="f-from" /></label>
+          <label class="field"><span data-i18n="a.filter.to">To</span><input type="datetime-local" id="f-to" /></label>
+        </div>
+        <div class="filter-checks">
+          <label class="chk"><input type="checkbox" id="f-priority" /><span data-i18n="a.filter.priority">Priority only</span></label>
+          <label class="chk"><input type="checkbox" id="f-conflict" /><span data-i18n="a.filter.conflict">Conflicts only</span></label>
+        </div>
+      </div>
+
+      <!-- Exports & data sharing (briefing §14): CSV / GeoJSON / GeoPackage /
+           PDF summary downloads + the authenticated REST API endpoint. -->
+      <div class="card exports">
+        <h2 data-i18n="a.export.title">Export &amp; share</h2>
+        <p class="intro" data-i18n="a.export.intro"></p>
+        <div class="export-buttons">
+          <button class="btn btn-secondary" data-fmt="csv" data-i18n="a.export.csv">CSV</button>
+          <button class="btn btn-secondary" data-fmt="geojson" data-i18n="a.export.geojson">GeoJSON</button>
+          <button class="btn btn-secondary" data-fmt="gpkg" data-i18n="a.export.gpkg">GeoPackage</button>
+          <button class="btn btn-primary" data-fmt="pdf" data-i18n="a.export.pdf">PDF summary</button>
+        </div>
+        <p id="export-status" class="export-status" hidden></p>
+        <p id="autopdf-note" class="autopdf-note" hidden></p>
+        <div class="api-box">
+          <div class="api-head">
+            <span class="api-label" data-i18n="a.export.api">REST API</span>
+            <button class="btn btn-text" id="api-copy" data-i18n="a.export.copy">Copy</button>
+          </div>
+          <p class="loc-hint" data-i18n="a.export.apiHint"></p>
+          <code id="api-url" class="api-url"></code>
+        </div>
+      </div>
+
+      <div class="card records">
+        <div class="records-head"><h2 id="records-count"></h2></div>
+        <div id="records-list" class="records-list"></div>
+        <p id="records-empty" class="intro" hidden data-i18n="a.empty"></p>
+      </div>
+
+      <div id="detail" class="card detail" hidden></div>
+    </section>
+  </main>
+
+  <script src="/vendor/i18next.min.js"></script>
+  <script src="/vendor/leaflet.js"></script>
+  <script src="/vendor/leaflet-heat.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/data.js"></script>
+  <script src="/js/shell.js"></script>
+  <script src="/js/analyst.js"></script>
+</body>
+</html>

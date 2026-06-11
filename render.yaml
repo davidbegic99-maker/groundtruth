@@ -1,0 +1,35 @@
+# Render Blueprint for GroundTruth — https://render.com
+#
+# One-time deploy (free tier, no card required):
+#   1. Push this repository to GitHub (a public or private repo both work).
+#   2. In Render: New + → Blueprint → connect the repo. Render reads this file.
+#   3. Click Apply. The first build runs `npm install`, then `npm start`.
+#   4. Render gives you a public HTTPS URL like https://groundtruth.onrender.com
+#      (TLS 1.3 terminated by Render). Open it — Reporter View at "/",
+#      Analyst View at "/analyst.html", analyst key "undp-demo".
+#
+# Notes:
+#   - The free tier uses an EPHEMERAL filesystem and sleeps after ~15 min idle,
+#     so the SQLite database resets on restart. That is fine for a TRL-4 demo:
+#     evaluators submit a report and immediately see it on the map + export it.
+#     To keep persistent data + photos across restarts, switch the plan to a paid
+#     instance and add a `disk:` block mounted at server/data (disks are not
+#     available on the free tier).
+#   - GT_PHOTO_KEY is generated once by Render and reused, so photos stored within
+#     a running session decrypt correctly.
+services:
+  - type: web
+    name: groundtruth
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ANALYST_KEY
+        value: undp-demo
+      - key: GT_PHOTO_KEY
+        generateValue: true

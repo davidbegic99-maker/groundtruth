@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-i18n-title="title.reporter">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="GroundTruth — offline-first community crisis reporting for UNDP." />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon.svg" />
+  <link rel="stylesheet" href="/vendor/leaflet.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <title>GroundTruth — Report damage</title>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◬</span>
+      <div>
+        <div class="brand-name">GroundTruth</div>
+        <div class="brand-view" data-i18n="nav.reporterView">Reporter View</div>
+      </div>
+    </div>
+    <div class="app-bar-right">
+      <span id="net-indicator" class="net-indicator">…</span>
+      <span class="visually-hidden" data-i18n="lang.label">Language</span>
+      <select id="lang-select" data-i18n-attr="aria-label:lang.label"></select>
+    </div>
+  </header>
+
+  <div id="net-banner" class="net-banner" hidden></div>
+
+  <main>
+    <!-- Welcome / first screen: prominent language selector lives in the app bar above -->
+    <section id="screen-welcome" class="screen active">
+      <div class="card">
+        <h1 data-i18n="welcome.title">Report damage in your community</h1>
+        <p class="intro" data-i18n="welcome.intro"></p>
+        <p class="offline-note">
+          <span class="icon" aria-hidden="true">⤓</span>
+          <span data-i18n="welcome.offlineReady"></span>
+        </p>
+        <button id="btn-start" class="btn btn-primary btn-block" data-i18n="welcome.start">Start a report</button>
+        <button id="btn-install" class="btn btn-secondary btn-block" style="margin-top:10px" data-i18n="install.button" hidden></button>
+        <p class="privacy" data-i18n="privacy.statement"></p>
+        <p class="counter" id="contrib-counter"></p>
+        <div id="queue-banner" class="queue-banner" hidden>
+          <span id="queue-text"></span>
+          <button id="btn-sync-now" class="btn btn-text" data-i18n="queue.syncNow"></button>
+        </div>
+      </div>
+      <a class="analyst-link" href="/analyst.html" data-i18n="nav.openAnalyst">Open Analyst Dashboard</a>
+    </section>
+
+    <!-- STEP: Photos -->
+    <section id="screen-photos" class="screen">
+      <div class="wizard-top">
+        <button class="btn btn-text back" data-go="screen-welcome" data-i18n="common.back">Back</button>
+        <span class="wizard-step pill" data-i18n="wizard.stepPhotos"></span>
+      </div>
+      <div class="card">
+        <h2 data-i18n="photos.title"></h2>
+        <p class="intro" data-i18n="photos.subtitle"></p>
+        <div class="photo-grid" id="photo-grid"></div>
+        <p class="privacy" data-i18n="privacy.statement"></p>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-photos-continue" data-i18n="photos.continue"></button>
+    </section>
+
+    <!-- STEP: Location (fallback chain) -->
+    <section id="screen-location" class="screen">
+      <div class="wizard-top">
+        <button class="btn btn-text back" data-go="screen-photos" data-i18n="common.back">Back</button>
+        <span class="wizard-step pill" data-i18n="wizard.stepLocation"></span>
+      </div>
+      <div class="card">
+        <h2 data-i18n="location.title"></h2>
+        <p class="intro" data-i18n="location.subtitle"></p>
+
+        <div id="loc-status" class="loc-status"></div>
+
+        <button class="btn btn-secondary btn-block" id="btn-use-gps">
+          <span data-i18n="location.useGps"></span>
+        </button>
+
+        <p class="loc-hint" data-i18n="location.tapMap"></p>
+        <div id="map" class="map" role="application" aria-label="map"></div>
+
+        <label class="field">
+          <span data-i18n="location.landmarkLabel"></span>
+          <input type="text" id="landmark-input" autocomplete="off"
+                 data-i18n-attr="placeholder:location.landmarkPlaceholder" />
+        </label>
+
+        <p class="loc-note" data-i18n="location.noBlock"></p>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-location-continue" data-i18n="location.continue"></button>
+    </section>
+
+    <!-- STEP: Hazard type (two-level: group then specific type) -->
+    <section id="screen-hazard" class="screen">
+      <div class="wizard-top">
+        <button class="btn btn-text back" data-go="screen-location" data-i18n="common.back">Back</button>
+        <span class="wizard-step pill" data-i18n="wizard.stepHazard"></span>
+      </div>
+      <div class="card">
+        <h2 data-i18n="hazard.title"></h2>
+        <p class="intro" data-i18n="hazard.subtitle"></p>
+        <div id="hazard-groups" class="choice-grid"></div>
+        <div id="hazard-types-wrap" hidden>
+          <p class="loc-hint" data-i18n="hazard.pickType"></p>
+          <div id="hazard-types" class="choice-grid"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-hazard-continue" data-i18n="common.continue" disabled></button>
+    </section>
+
+    <!-- STEP: AI assessment + user confirmation -->
+    <section id="screen-assess" class="screen">
+      <div class="wizard-top">
+        <button class="btn btn-text back" data-go="screen-hazard" data-i18n="common.back">Back</button>
+        <span class="wizard-step pill" data-i18n="wizard.stepAssess"></span>
+      </div>
+      <div id="safety-banner-assess" class="safety-banner" hidden></div>
+      <div class="card">
+        <h2 data-i18n="assess.title"></h2>
+        <p class="intro" data-i18n="assess.subtitle"></p>
+
+        <div id="ai-box" class="ai-box">
+          <div class="ai-spinner" id="ai-spinner">
+            <span class="spinner" aria-hidden="true"></span>
+            <span data-i18n="assess.analyzing"></span>
+          </div>
+        </div>
+
+        <fieldset class="choice-fieldset">
+          <legend data-i18n="assess.damageLegend"></legend>
+          <div id="damage-choices" class="choice-grid"></div>
+        </fieldset>
+
+        <fieldset class="choice-fieldset">
+          <legend data-i18n="assess.infraLegend"></legend>
+          <div id="infra-choices" class="choice-list"></div>
+        </fieldset>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-assess-continue" data-i18n="common.continue" disabled></button>
+    </section>
+
+    <!-- STEP: Mandatory + optional questions -->
+    <section id="screen-questions" class="screen">
+      <div class="wizard-top">
+        <button class="btn btn-text back" data-go="screen-assess" data-i18n="common.back">Back</button>
+        <span class="wizard-step pill" data-i18n="wizard.stepQuestions"></span>
+      </div>
+      <div id="safety-banner-questions" class="safety-banner" hidden></div>
+      <div class="card">
+        <h2 data-i18n="questions.title"></h2>
+
+        <fieldset class="choice-fieldset mandatory">
+          <legend><span class="req-dot" aria-hidden="true">●</span> <span id="mandatory-label"></span></legend>
+          <div id="mandatory-choices" class="choice-grid"></div>
+        </fieldset>
+
+        <div id="optional-questions"></div>
+
+        <label class="field">
+          <span data-i18n="questions.descLabel"></span>
+          <textarea id="desc-input" rows="3" autocomplete="off"
+                    data-i18n-attr="placeholder:questions.descPlaceholder"></textarea>
+        </label>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-questions-continue" data-i18n="questions.continue" disabled></button>
+    </section>
+
+    <!-- STEP: Review (read-only summary; Submit is wired in Step 4) -->
+    <section id="screen-review" class="screen">
+      <div class="wizard-top">
+        <button class="btn btn-text back" data-go="screen-questions" data-i18n="common.back">Back</button>
+        <span class="wizard-step pill" data-i18n="wizard.stepReview"></span>
+      </div>
+      <div id="safety-banner-review" class="safety-banner" hidden></div>
+      <div class="card">
+        <h2 data-i18n="review.title"></h2>
+        <p class="intro" data-i18n="review.subtitle"></p>
+        <div id="review-summary" class="review-summary"></div>
+        <p class="privacy" data-i18n="privacy.statement"></p>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-submit" data-i18n="review.submit"></button>
+    </section>
+
+    <!-- STEP: Confirmation (online "submitted" vs offline "saved, will upload later") -->
+    <section id="screen-confirm" class="screen">
+      <div class="card confirm-card">
+        <div id="confirm-banner" class="confirm-banner"></div>
+        <h2 id="confirm-title"></h2>
+        <div id="confirm-map" class="map confirm-map" role="img" aria-label="map" hidden></div>
+        <p id="confirm-noloc" class="loc-note" hidden></p>
+        <dl id="confirm-details" class="review-list"></dl>
+        <div id="confirm-priority" class="review-flag priority" hidden></div>
+        <div id="confirm-queue" class="confirm-queue" hidden></div>
+        <p class="privacy" data-i18n="privacy.statement"></p>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-confirm-another" data-i18n="confirm.another"></button>
+    </section>
+  </main>
+
+  <!-- Photo guidance overlay (dismissible, shown before first photo capture) -->
+  <div id="guidance-overlay" class="overlay" hidden>
+    <div class="overlay-card" role="dialog" aria-modal="false" aria-labelledby="guidance-title">
+      <h3 id="guidance-title" data-i18n="guidance.title"></h3>
+      <ol class="guidance-list">
+        <li data-i18n="guidance.l1"></li>
+        <li data-i18n="guidance.l2"></li>
+        <li data-i18n="guidance.l3"></li>
+        <li data-i18n="guidance.l4"></li>
+      </ol>
+      <button class="btn btn-primary btn-block" id="btn-guidance-gotit" data-i18n="guidance.gotIt"></button>
+    </div>
+  </div>
+
+  <script src="/vendor/i18next.min.js"></script>
+  <script src="/vendor/leaflet.js"></script>
+  <script src="/vendor/exifr.js"></script>
+  <script src="/vendor/localforage.min.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/shell.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/data.js"></script>
+  <script src="/js/report.js"></script>
+  <script src="/js/flow.js"></script>
+  <script src="/js/submit.js"></script>
+</body>
+</html>

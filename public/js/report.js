@@ -1,0 +1,450 @@
+/* GroundTruth Reporter wizard — Step 2: photos + location fallback chain.
+ *
+ * Holds the in-progress report state (window.GTReport) that later steps
+ * (hazard, AI, answers, submit) extend. Handles:
+ *   - photo capture (up to 3) with the dismissible guidance overlay
+ *   - EXIF GPS + timestamp extraction (privacy: the stored JPEG is re-encoded
+ *     via canvas, which strips ALL metadata; we keep only lat/lon/timestamp)
+ *   - client-side compression to a configurable target size
+ *   - location fallback chain: EXIF GPS -> live device GPS -> map tap -> landmark
+ */
+(function () {
+  const SLOT_COUNT = 3;
+
+  // --- shared report state -------------------------------------------------
+  const state = {
+    photos: [],            // [{url, blob, mime, width, height, sizeKB, hash, exifLat, exifLon, ts}]
+    lat: null,
+    lon: null,
+    accuracy: null,
+    location_method: null, // EXIF | LiveGPS | MapTap | Landmark | Unknown
+    landmark_text: null,
+    timestamp: null        // capture time from EXIF; null -> defaults to now at submit
+  };
+  window.GTReport = state;
+
+  let settings = { photo_target_kb: 200 };
+  let guidanceShownThisReport = false;
+  let pendingSlot = null;
+  let map = null;
+  let marker = null;
+  let accuracyCircle = null;
+
+  const t = (k, o) => window.i18next.t(k, o);
+
+  // =========================================================================
+  // Boot
+  // =========================================================================
+  document.addEventListener('gt:shellready', () => {
+    fetchSettings();
+
+    document.getElementById('btn-start')?.addEventListener('click', startReport);
+    document.getElementById('btn-photos-continue')?.addEventListener('click', goToLocation);
+    document.getElementById('btn-location-continue')?.addEventListener('click', goToNextStep);
+    document.getElementById('btn-use-gps')?.addEventListener('click', useLiveGps);
+    document.getElementById('btn-guidance-gotit')?.addEventListener('click', dismissGuidance);
+    document.getElementById('guidance-overlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'guidance-overlay') dismissGuidance(); // backdrop tap = dismiss
+    });
+
+    const landmark = document.getElementById('landmark-input');
+    landmark?.addEventListener('input', () => { state.landmark_text = landmark.value.trim() || null; });
+
+    // Re-render translated bits when language changes.
+    document.addEventListener('gt:languagechanged', () => {
+      renderPhotoGrid();
+      updateLocStatus();
+    });
+  });
+
+  async function fetchSettings() {
+    try {
+      const r = await fetch('/api/settings');
+      if (r.ok) {
+        const map = {};
+        (await r.json()).settings.forEach((s) => (map[s.key] = s.value));
+        settings.photo_target_kb = Number(map.photo_target_kb) || 200;
+      }
+    } catch (_) { /* offline — use defaults */ }
+  }
+
+  // =========================================================================
+  // Wizard navigation
+  // =========================================================================
+  function startReport() {
+    resetState();
+    renderPhotoGrid();
+    window.GT_showScreen('screen-photos');
+  }
+
+  function resetState() {
+    state.photos.forEach((p) => p && p.url && URL.revokeObjectURL(p.url));
+    state.photos = [];
+    state.lat = state.lon = state.accuracy = null;
+    state.location_method = null;
+    state.landmark_text = null;
+    state.timestamp = null;
+    guidanceShownThisReport = false;
+    const li = document.getElementById('landmark-input');
+    if (li) li.value = '';
+    // Let Step 3 (flow.js) clear its own fields for a fresh report.
+    document.dispatchEvent(new CustomEvent('gt:reportreset'));
+  }
+
+  function goToLocation() {
+    window.GT_showScreen('screen-location');
+    initMapOnce();
+    setTimeout(() => { if (map) { map.invalidateSize(); syncMap(); } }, 60);
+    updateLocStatus();
+  }
+
+  function goToNextStep() {
+    commitLocation();
+    window.GT_showScreen('screen-hazard');
+    // Hand off to the Step 3 flow (hazard / AI / questions / review).
+    document.dispatchEvent(new CustomEvent('gt:locationcommitted'));
+  }
+
+  // =========================================================================
+  // Photos
+  // =========================================================================
+  function slotLabel(i) { return t(`photos.slot${i + 1}`); }
+  function slotTag(i) { return i === 0 ? t('photos.recommended') : t('photos.optional'); }
+
+  function renderPhotoGrid() {
+    const grid = document.getElementById('photo-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      const photo = state.photos[i];
+      const slot = document.createElement('div');
+      slot.className = 'photo-slot' + (photo ? ' filled' : '');
+
+      const head = document.createElement('div');
+      head.className = 'photo-slot-head';
+      head.innerHTML = `<span class="photo-slot-label">${escapeHtml(slotLabel(i))}</span>` +
+        `<span class="photo-tag ${i === 0 ? 'rec' : ''}">${escapeHtml(slotTag(i))}</span>`;
+      slot.appendChild(head);
+
+      if (photo) {
+        const img = document.createElement('img');
+        img.className = 'photo-thumb';
+        img.src = photo.url;
+        img.alt = slotLabel(i);
+        slot.appendChild(img);
+
+        const meta = document.createElement('div');
+        meta.className = 'photo-meta';
+        meta.textContent = `${photo.width}×${photo.height} · ${photo.sizeKB} KB`;
+        slot.appendChild(meta);
+
+        if (photo.exifLat != null && photo.exifLon != null) {
+          const gps = document.createElement('div');
+          gps.className = 'photo-gps';
+          gps.textContent = '📍 ' + t('photos.gpsFound');
+          slot.appendChild(gps);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'photo-actions';
+        const rep = document.createElement('button');
+        rep.className = 'btn btn-text';
+        rep.textContent = t('photos.replace');
+        rep.addEventListener('click', () => requestPhoto(i));
+        const rem = document.createElement('button');
+        rem.className = 'btn btn-text danger';
+        rem.textContent = t('photos.remove');
+        rem.addEventListener('click', () => removePhoto(i));
+        actions.append(rep, rem);
+        slot.appendChild(actions);
+      } else {
+        const add = document.createElement('button');
+        add.className = 'photo-add';
+        add.innerHTML = `<span class="plus">＋</span><span>${escapeHtml(t('photos.add'))}</span>`;
+        add.addEventListener('click', () => requestPhoto(i));
+        slot.appendChild(add);
+      }
+      grid.appendChild(slot);
+    }
+  }
+
+  function requestPhoto(i) {
+    pendingSlot = i;
+    if (!guidanceShownThisReport) {
+      showGuidance();
+    } else {
+      openFilePicker();
+    }
+  }
+
+  function showGuidance() {
+    const ov = document.getElementById('guidance-overlay');
+    if (ov) ov.hidden = false;
+  }
+  function dismissGuidance() {
+    const ov = document.getElementById('guidance-overlay');
+    if (ov) ov.hidden = true;
+    guidanceShownThisReport = true;
+    openFilePicker();
+  }
+
+  function openFilePicker() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0];
+      if (file) await processFile(file, pendingSlot);
+      input.remove();
+    });
+    document.body.appendChild(input);
+    input.click();
+  }
+
+  async function processFile(file, idx) {
+    // show a processing placeholder in the slot
+    state.photos[idx] = { processing: true };
+    renderPhotoGrid();
+    markProcessing(idx);
+
+    const [exif, compressed] = await Promise.all([extractExif(file), compressImage(file)]);
+    const hash = await sha256(compressed.blob);
+    const url = URL.createObjectURL(compressed.blob);
+
+    state.photos[idx] = {
+      url,
+      blob: compressed.blob,           // compressed (~photo_target_kb) — used for upload
+      mime: 'image/jpeg',
+      width: compressed.width,
+      height: compressed.height,
+      sizeKB: Math.round(compressed.blob.size / 1024),
+      // §16: keep the FULL-RESOLUTION original so it can be retained locally on the
+      // device. The compressed copy above is what gets uploaded; this is not.
+      fullBlob: file,
+      fullMime: file.type || 'image/jpeg',
+      fullSizeKB: Math.round(file.size / 1024),
+      hash,
+      exifLat: exif.lat,
+      exifLon: exif.lon,
+      ts: exif.ts
+    };
+
+    // Location fallback #1: EXIF GPS (don't override an explicit user choice)
+    if (exif.lat != null && exif.lon != null &&
+        (state.location_method == null || state.location_method === 'EXIF')) {
+      setCoords(exif.lat, exif.lon, 'EXIF', null);
+    }
+    // Capture timestamp from EXIF if we don't already have one
+    if (exif.ts && !state.timestamp) state.timestamp = exif.ts;
+
+    renderPhotoGrid();
+  }
+
+  function markProcessing(idx) {
+    const slots = document.querySelectorAll('.photo-slot');
+    const slot = slots[idx];
+    if (slot) {
+      slot.classList.add('filled');
+      slot.insertAdjacentHTML('beforeend', `<div class="photo-processing">${escapeHtml(t('photos.processing'))}</div>`);
+    }
+  }
+
+  function removePhoto(i) {
+    const p = state.photos[i];
+    if (p && p.url) URL.revokeObjectURL(p.url);
+    state.photos[i] = undefined;
+    // If EXIF location came from photos and none remain with GPS, and the user
+    // hasn't picked another method, clear it back so the chain can re-resolve.
+    if (state.location_method === 'EXIF') {
+      const anyGps = state.photos.find((ph) => ph && ph.exifLat != null);
+      if (!anyGps) { state.lat = state.lon = null; state.location_method = null; syncMap(); updateLocStatus(); }
+    }
+    renderPhotoGrid();
+  }
+
+  // --- EXIF ---------------------------------------------------------------
+  async function extractExif(file) {
+    let lat = null, lon = null, ts = null;
+    try {
+      const g = await window.exifr.gps(file);
+      if (g && typeof g.latitude === 'number' && typeof g.longitude === 'number') {
+        lat = g.latitude; lon = g.longitude;
+      }
+    } catch (_) { /* no GPS */ }
+    try {
+      // NB: the exifr "lite" build throws on the `pick` option, so read the
+      // EXIF block and select the date fields ourselves.
+      const meta = await window.exifr.parse(file, { tiff: true, exif: true });
+      const d = meta && (meta.DateTimeOriginal || meta.CreateDate || meta.ModifyDate);
+      if (d) {
+        const date = d instanceof Date ? d : new Date(d);
+        if (!isNaN(date.getTime())) ts = date.toISOString();
+      }
+    } catch (_) { /* no date */ }
+    return { lat, lon, ts };
+  }
+
+  // --- Compression (Canvas; also strips all metadata for privacy) ---------
+  async function compressImage(file) {
+    const targetBytes = (settings.photo_target_kb || 200) * 1024;
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (_) {
+      bitmap = await createImageBitmap(file);
+    }
+    const maxDim = 1600;
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+    if (bitmap.close) bitmap.close();
+
+    let quality = 0.85;
+    let blob = await canvasToBlob(canvas, quality);
+    while (blob && blob.size > targetBytes && quality > 0.4) {
+      quality -= 0.1;
+      blob = await canvasToBlob(canvas, quality);
+    }
+    return { blob, width: w, height: h };
+  }
+  function canvasToBlob(canvas, quality) {
+    return new Promise((res) => canvas.toBlob(res, 'image/jpeg', quality));
+  }
+
+  async function sha256(blob) {
+    const buf = await blob.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // =========================================================================
+  // Location
+  // =========================================================================
+  function setCoords(lat, lon, method, accuracy) {
+    state.lat = lat;
+    state.lon = lon;
+    state.location_method = method;
+    state.accuracy = accuracy;
+    syncMap();
+    updateLocStatus();
+  }
+
+  function useLiveGps() {
+    const btn = document.getElementById('btn-use-gps');
+    if (!navigator.geolocation) { showLocMessage(t('location.gpsUnavailable')); return; }
+    if (btn) { btn.disabled = true; btn.querySelector('span').textContent = t('location.gpsLocating'); }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords(pos.coords.latitude, pos.coords.longitude, 'LiveGPS', pos.coords.accuracy);
+        if (map) map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+        resetGpsButton();
+      },
+      (err) => {
+        showLocMessage(err.code === 1 ? t('location.gpsDenied') : t('location.gpsUnavailable'));
+        resetGpsButton();
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
+  function resetGpsButton() {
+    const btn = document.getElementById('btn-use-gps');
+    if (btn) { btn.disabled = false; btn.querySelector('span').textContent = t('location.useGps'); }
+  }
+
+  function initMapOnce() {
+    if (map || typeof L === 'undefined') return;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: '/vendor/images/marker-icon-2x.png',
+      iconUrl: '/vendor/images/marker-icon.png',
+      shadowUrl: '/vendor/images/marker-shadow.png'
+    });
+    const start = (state.lat != null) ? [state.lat, state.lon] : [20, 0];
+    const zoom = (state.lat != null) ? 17 : 2;
+    map = L.map('map', { zoomControl: true }).setView(start, zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    map.on('click', (e) => {
+      setCoords(e.latlng.lat, e.latlng.lng, 'MapTap', null);
+    });
+  }
+
+  function syncMap() {
+    if (!map) return;
+    if (accuracyCircle) { map.removeLayer(accuracyCircle); accuracyCircle = null; }
+    if (state.lat == null) {
+      if (marker) { map.removeLayer(marker); marker = null; }
+      return;
+    }
+    const ll = [state.lat, state.lon];
+    if (!marker) {
+      marker = L.marker(ll, { draggable: true }).addTo(map);
+      marker.on('dragend', () => {
+        const p = marker.getLatLng();
+        setCoords(p.lat, p.lng, 'MapTap', null);
+      });
+    } else {
+      marker.setLatLng(ll);
+    }
+    if (state.accuracy && state.location_method === 'LiveGPS') {
+      accuracyCircle = L.circle(ll, { radius: state.accuracy, color: '#1565c0', weight: 1, fillOpacity: 0.1 }).addTo(map);
+    }
+    if (map.getZoom() < 14) map.setView(ll, 17);
+  }
+
+  function methodLabel() {
+    switch (state.location_method) {
+      case 'EXIF': return t('location.methodEXIF');
+      case 'LiveGPS': return t('location.methodLiveGPS');
+      case 'MapTap': return t('location.methodMapTap');
+      case 'Landmark': return t('location.methodLandmark');
+      case 'Unknown': return t('location.methodUnknown');
+      default: return null;
+    }
+  }
+
+  function updateLocStatus() {
+    const el = document.getElementById('loc-status');
+    if (!el) return;
+    const label = methodLabel();
+    if (state.lat == null && state.location_method !== 'Landmark') {
+      el.className = 'loc-status none';
+      el.textContent = t('location.none');
+      return;
+    }
+    el.className = 'loc-status set';
+    const coords = state.lat != null
+      ? `${state.lat.toFixed(5)}, ${state.lon.toFixed(5)}`
+      : '—';
+    let html = `<strong>${escapeHtml(t('location.selected'))}:</strong> ${escapeHtml(label || '')}`;
+    if (state.lat != null) html += `<br><span class="loc-coords">${coords}</span>`;
+    if (state.accuracy && state.location_method === 'LiveGPS') {
+      html += ` <span class="loc-acc">${escapeHtml(t('location.gpsAccuracy', { m: Math.round(state.accuracy) }))}</span>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function showLocMessage(msg) {
+    const el = document.getElementById('loc-status');
+    if (el) { el.className = 'loc-status msg'; el.textContent = msg; }
+  }
+
+  function commitLocation() {
+    if (state.lat == null && state.lon == null) {
+      const lm = (document.getElementById('landmark-input')?.value || '').trim();
+      if (lm) { state.location_method = 'Landmark'; state.landmark_text = lm; }
+      else { state.location_method = 'Unknown'; state.landmark_text = null; }
+    } else {
+      state.landmark_text = null; // method reflects the coordinate source
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+})();

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GroundTruth">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <!-- ground lines -->
+  <g stroke="#1565c0" stroke-width="14" stroke-linecap="round" opacity="0.55">
+    <line x1="96" y1="392" x2="416" y2="392"/>
+    <line x1="140" y1="430" x2="372" y2="430"/>
+  </g>
+  <!-- map pin -->
+  <path d="M256 96c-71 0-128 55-128 124 0 92 112 180 124 188a7 7 0 0 0 8 0c12-8 124-96 124-188 0-69-57-124-128-124z" fill="#1565c0"/>
+  <circle cx="256" cy="222" r="52" fill="#ffffff"/>
+  <circle cx="256" cy="222" r="22" fill="#0f172a"/>
+</svg>

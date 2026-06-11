@@ -1,0 +1,26 @@
+{
+  "name": "groundtruth",
+  "version": "0.1.0",
+  "description": "GroundTruth — Community Crisis Mapping Platform (UNDP TRL-4 prototype)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "exifr": "^7.1.3",
+    "express": "^5.2.1",
+    "i18next": "^26.3.1",
+    "jpeg-js": "^0.4.4",
+    "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
+    "localforage": "^1.10.0"
+  },
+  "devDependencies": {
+    "piexifjs": "^1.0.6"
+  }
+}

@@ -1,0 +1,332 @@
+{
+  "a": {
+    "publicTab": "公共概览",
+    "analystTab": "分析员记录",
+    "heatmap": "热力图",
+    "coverage": "覆盖空白",
+    "publicHint": "此公共概览仅按区域显示汇总统计，绝不显示单个报告。切换到“分析员记录”（需要访问密钥）以查看完整详情。",
+    "underserved": "报告不足区域 — 此处报告很少",
+    "cellReports": "该区域有 {{count}} 份报告",
+    "records": "{{count}} 条记录",
+    "reportsInView": "视图中有 {{count}} 份报告",
+    "empty": "没有符合这些筛选条件的报告。",
+    "filters": "筛选",
+    "exportsSoon": "导出工具（CSV、GeoJSON、GeoPackage、PDF）将在下一个构建步骤中添加。",
+    "login": {
+      "title": "分析员访问",
+      "body": "完整记录、照片和导出受限。请输入分析员访问密钥以继续。",
+      "label": "访问密钥",
+      "placeholder": "输入访问密钥",
+      "hint": "原型访问密钥：undp-demo",
+      "error": "该访问密钥未被接受。请重试。",
+      "button": "解锁"
+    },
+    "filter": {
+      "all": "全部",
+      "clear": "清除",
+      "damage": "损坏程度",
+      "hazard": "紧急情况类型",
+      "infra": "建筑类型",
+      "from": "从",
+      "to": "至",
+      "priority": "仅优先",
+      "conflict": "仅冲突"
+    },
+    "detail": {
+      "title": "报告详情",
+      "priority": "优先",
+      "conflict": "冲突",
+      "userDamage": "已确认损坏",
+      "aiDamage": "AI 建议",
+      "aiConfidence": "AI 置信度",
+      "aiPercent": "AI 损坏估计",
+      "hazard": "紧急情况类型",
+      "infra": "建筑类型",
+      "people": "附近有人处于危险中吗？",
+      "time": "报告时间",
+      "method": "定位方式",
+      "coordinates": "坐标",
+      "channel": "渠道",
+      "description": "描述",
+      "photos": "照片",
+      "versions": "版本历史",
+      "version": "版本 {{n}}",
+      "translated": "英文翻译"
+    },
+    "export": {
+      "title": "导出与分享",
+      "intro": "下载内容包含符合上述筛选条件的记录。",
+      "csv": "CSV",
+      "geojson": "GeoJSON",
+      "gpkg": "GeoPackage",
+      "pdf": "PDF 摘要",
+      "preparing": "正在准备…",
+      "failed": "导出失败。请重试。",
+      "api": "REST API",
+      "apiHint": "经过身份验证的 GeoJSON 端点 — 发送请求头 x-analyst-key。示例：",
+      "autoPdf": "{{count}} 个区域已达到自动摘要阈值（{{r}} 米内有 {{n}} 份报告）。可从下方地图视图生成 PDF。",
+      "copy": "复制",
+      "copied": "已复制"
+    }
+  },
+  "app": {
+    "name": "GroundTruth",
+    "tagline": "社区危机测绘"
+  },
+  "lang": {
+    "label": "语言"
+  },
+  "title": {
+    "reporter": "GroundTruth — 报告损毁",
+    "analyst": "GroundTruth — 分析师仪表板"
+  },
+  "status": {
+    "online": "在线",
+    "offline": "离线",
+    "offlineBanner": "您当前处于离线状态。您的报告已保存在本设备上，恢复联网后将自动上传。"
+  },
+  "nav": {
+    "reporterView": "报告者视图",
+    "analystView": "分析师视图",
+    "openAnalyst": "打开分析师仪表板",
+    "openReporter": "打开报告者视图"
+  },
+  "welcome": {
+    "title": "报告您社区中的损毁情况",
+    "intro": "帮助救援人员找到受困人员和受损建筑。提交报告约需一分钟，无需账户。",
+    "offlineReady": "支持离线使用 — 即使没有信号也能报告。",
+    "start": "开始报告"
+  },
+  "privacy": {
+    "statement": "您的报告是匿名的。不会存储或分享任何个人信息。"
+  },
+  "counter": {
+    "contributions": "您所在区域已提交 {{count}} 份报告"
+  },
+  "install": {
+    "button": "安装应用"
+  },
+  "analyst": {
+    "placeholderTitle": "分析师仪表板",
+    "placeholderBody": "分析师仪表板（地图、标记、导出）将在后续步骤中构建。"
+  },
+  "common": {
+    "continue": "继续",
+    "skip": "跳过",
+    "cancel": "取消",
+    "gotIt": "知道了",
+    "back": "返回",
+    "optional": "可选 — 不确定可跳过"
+  },
+  "photos": {
+    "title": "添加照片",
+    "subtitle": "照片有助于我们评估损毁。一张清晰的建筑照片就足够 — 多拍更好。",
+    "slot1": "照片 1 — 建筑全貌",
+    "slot2": "照片 2 — 损毁特写",
+    "slot3": "照片 3 — 周边环境",
+    "add": "添加照片",
+    "replace": "替换",
+    "remove": "移除",
+    "optional": "可选",
+    "recommended": "建议",
+    "gpsFound": "已从此照片中找到位置",
+    "processing": "处理中…",
+    "continue": "继续"
+  },
+  "guidance": {
+    "title": "如何拍摄有用的照片",
+    "l1": "从正面拍摄整栋建筑。",
+    "l2": "再拍一张可见损毁处的特写。",
+    "l3": "站在正门前以获得最佳定位精度。",
+    "l4": "请勿拍摄人物 — 不需要面孔和个人细节，这样可保护您的隐私。",
+    "gotIt": "知道了"
+  },
+  "location": {
+    "title": "确认位置",
+    "subtitle": "这用于将您的报告标在地图上。没有必填方式 — 用您能用的即可。",
+    "useGps": "使用我的当前位置",
+    "gpsLocating": "定位中…",
+    "gpsAccuracy": "精度：约 {{m}} 米",
+    "gpsDenied": "位置权限被拒绝。您可以点按地图或描述一个地标。",
+    "gpsUnavailable": "无法实时定位。您可以点按地图或描述一个地标。",
+    "tapMap": "或点按地图放置标记",
+    "landmarkLabel": "或描述附近的地标",
+    "landmarkPlaceholder": "例如：主路上的蓝色清真寺附近",
+    "selected": "已选位置",
+    "methodEXIF": "来自照片定位",
+    "methodLiveGPS": "来自您的设备",
+    "methodMapTap": "在地图上标记",
+    "methodLandmark": "来自地标描述",
+    "methodUnknown": "未设置 — 分析师可跟进",
+    "none": "尚未设置位置",
+    "noBlock": "即使没有位置也可以继续。",
+    "continue": "继续"
+  },
+  "wizard": {
+    "stepPhotos": "照片",
+    "stepLocation": "位置",
+    "stepHazard": "灾害",
+    "stepAssess": "损毁",
+    "stepQuestions": "问题",
+    "stepReview": "核对",
+    "step": "第 {{n}} 步，共 {{total}} 步"
+  },
+  "hazard": {
+    "title": "这是哪种紧急情况？",
+    "subtitle": "选择最接近的一项。这将定制后续问题。",
+    "pickType": "现在选择具体类型：",
+    "group": {
+      "natural": "自然灾害",
+      "tech": "技术 / 工业",
+      "human": "人为危机"
+    },
+    "type": {
+      "earthquake": "地震",
+      "flood": "洪水",
+      "tsunami": "海啸",
+      "hurricane": "飓风 / 气旋",
+      "wildfire": "野火",
+      "explosion": "爆炸",
+      "chemical": "化学事故",
+      "conflict": "冲突",
+      "unrest": "内乱"
+    }
+  },
+  "safety": {
+    "conflict": "您的报告完全匿名。",
+    "chemical": "请勿靠近建筑。仅从安全距离报告。"
+  },
+  "assess": {
+    "title": "损毁评估",
+    "subtitle": "我们的 AI 会根据您的照片建议损毁等级。最终由您决定 — 确认或更改。",
+    "analyzing": "正在分析您的照片…",
+    "aiSuggests": "AI 建议",
+    "confidence": "置信度：{{pct}}%",
+    "aiInfra": "可能的建筑类型",
+    "mockNote": "原型估计 — 因未配置 AI 密钥，显示的是示例 AI 结果。",
+    "confirmHint": "请在下方确认或更正损毁等级。",
+    "damageLegend": "损毁等级（由您确认）",
+    "infraLegend": "建筑 / 基础设施类型",
+    "offline": "您处于离线状态 — 已跳过 AI 评估。请自行选择损毁等级。",
+    "noPhoto": "未添加照片 — 请自行选择损毁等级。",
+    "failed": "AI 评估无法运行。请自行选择损毁等级。"
+  },
+  "damage": {
+    "minimal": "轻微",
+    "partial": "部分",
+    "complete": "完全",
+    "minimalDesc": "无结构性损毁，或仅有细微表面裂缝。",
+    "partialDesc": "开裂、倾斜或部分破坏 — 受损但仍矗立。",
+    "completeDesc": "倒塌、严重倾斜或位移 — 不安全。"
+  },
+  "infra": {
+    "residential": "住宅",
+    "residentialDesc": "房屋和公寓",
+    "commercial": "商业",
+    "commercialDesc": "市场、商场、商店、酒店、银行、工业",
+    "government": "政府建筑",
+    "governmentDesc": "行政楼、法院、警察局、消防站",
+    "utility": "公用设施",
+    "utilityDesc": "水泵、发电厂、废物处理厂",
+    "transport": "交通与通信",
+    "transportDesc": "道路、信号塔、桥梁、火车站、公交站",
+    "community": "社区设施",
+    "communityDesc": "学校、医院、社区礼堂、公共厕所",
+    "publicspace": "公共空间 / 休闲",
+    "publicspaceDesc": "体育场、游乐场、宗教建筑"
+  },
+  "questions": {
+    "title": "几个简短的问题",
+    "descLabel": "还有其他情况吗？（可选）",
+    "descPlaceholder": "用任何语言描述您所看到的情况。",
+    "continue": "核对报告"
+  },
+  "mandatory": {
+    "question": "此地点附近是否有人被困或处于危险中？",
+    "yes": "是",
+    "no": "否",
+    "idk": "不知道"
+  },
+  "q": {
+    "eq": {
+      "1": "墙体或柱子上是否有可见裂缝？",
+      "2": "通往此地点的道路是否受阻？"
+    },
+    "flood": {
+      "1": "该建筑处的大致水位",
+      "2": "道路或桥梁是否可通行？"
+    },
+    "hur": {
+      "1": "屋顶是否部分或完全缺失？",
+      "2": "附近是否有倒落的电线？"
+    },
+    "fire": {
+      "1": "此地点附近是否仍有明火？",
+      "2": "烟雾是否影响能见度？"
+    },
+    "tsu": {
+      "1": "此地点是否仍有积水？",
+      "2": "碎屑是否阻碍通行？"
+    },
+    "conf": {
+      "1": "靠近此地点是否安全？",
+      "2": "是否有可见的爆炸或冲击痕迹？"
+    },
+    "exp": {
+      "1": "是否有可见的烟雾或异常气味？",
+      "2": "周边区域是否已疏散？"
+    }
+  },
+  "opt": {
+    "yes": "是",
+    "no": "否",
+    "idk": "不知道",
+    "open": "畅通",
+    "blocked": "受阻",
+    "dry": "干燥",
+    "ankle": "脚踝",
+    "knee": "膝盖",
+    "waist": "腰部",
+    "aboveWaist": "高于腰部",
+    "intact": "完好",
+    "partiallyMissing": "部分缺失",
+    "fullyMissing": "完全缺失",
+    "active": "仍在燃烧",
+    "contained": "已控制",
+    "extinguished": "已扑灭",
+    "yesFlowing": "是 — 流动",
+    "standing": "积水",
+    "receded": "已退去"
+  },
+  "review": {
+    "title": "核对您的报告",
+    "subtitle": "检查详情后提交。您可以返回修改任何内容。",
+    "hazard": "紧急情况类型",
+    "damage": "损毁等级",
+    "infra": "建筑类型",
+    "location": "位置",
+    "danger": "有人处于危险？",
+    "photos": "照片",
+    "priorityNote": "此报告将被标记为优先，供救援人员处理。",
+    "submit": "提交报告",
+    "step4Pending": "报告已成功汇总。保存与离线队列将在下一构建步骤中加入。"
+  },
+  "confirm": {
+    "titleOnline": "报告已提交",
+    "titleOffline": "报告已保存",
+    "bannerOnline": "报告提交成功。",
+    "bannerOffline": "报告已保存——恢复联网后将自动上传。",
+    "damage": "损毁等级",
+    "infra": "建筑类型",
+    "time": "报告时间",
+    "noLocation": "此报告未设置位置。",
+    "priority": "此报告已被标记为优先，供救援人员处理。",
+    "queuedNote": "已保存在此设备上。等待上传：{{count}}。",
+    "another": "再提交一份报告"
+  },
+  "queue": {
+    "pending": "等待上传：{{count}}",
+    "syncNow": "立即同步",
+    "syncing": "正在同步……"
+  }
+}

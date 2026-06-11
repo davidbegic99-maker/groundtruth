@@ -1,0 +1,332 @@
+{
+  "a": {
+    "publicTab": "Vista pública",
+    "analystTab": "Registros del analista",
+    "heatmap": "Mapa de calor",
+    "coverage": "Zonas sin cobertura",
+    "publicHint": "Esta vista pública muestra solo totales agrupados por zona, nunca informes individuales. Cambie a Registros del analista (se requiere clave de acceso) para ver el detalle completo.",
+    "underserved": "Zona poco notificada — pocos informes aquí",
+    "cellReports": "{{count}} informes en esta zona",
+    "records": "{{count}} registros",
+    "reportsInView": "{{count}} informes en la vista",
+    "empty": "Ningún informe coincide con estos filtros.",
+    "filters": "Filtros",
+    "exportsSoon": "Las herramientas de exportación (CSV, GeoJSON, GeoPackage, PDF) se añadirán en el siguiente paso de construcción.",
+    "login": {
+      "title": "Acceso del analista",
+      "body": "Los registros completos, las fotos y las exportaciones están restringidos. Introduzca la clave de acceso del analista para continuar.",
+      "label": "Clave de acceso",
+      "placeholder": "Introduzca la clave de acceso",
+      "hint": "Clave de acceso del prototipo: undp-demo",
+      "error": "No se aceptó esa clave de acceso. Inténtelo de nuevo.",
+      "button": "Desbloquear"
+    },
+    "filter": {
+      "all": "Todos",
+      "clear": "Borrar",
+      "damage": "Nivel de daño",
+      "hazard": "Tipo de emergencia",
+      "infra": "Tipo de edificio",
+      "from": "Desde",
+      "to": "Hasta",
+      "priority": "Solo prioritarios",
+      "conflict": "Solo conflictos"
+    },
+    "detail": {
+      "title": "Detalle del informe",
+      "priority": "Prioridad",
+      "conflict": "Conflicto",
+      "userDamage": "Daño confirmado",
+      "aiDamage": "Sugerencia de IA",
+      "aiConfidence": "Confianza de IA",
+      "aiPercent": "Estimación de daño por IA",
+      "hazard": "Tipo de emergencia",
+      "infra": "Tipo de edificio",
+      "people": "¿Hay personas en peligro?",
+      "time": "Notificado a las",
+      "method": "Método de ubicación",
+      "coordinates": "Coordenadas",
+      "channel": "Canal",
+      "description": "Descripción",
+      "photos": "Fotos",
+      "versions": "Historial de versiones",
+      "version": "Versión {{n}}",
+      "translated": "Traducción al inglés"
+    },
+    "export": {
+      "title": "Exportar y compartir",
+      "intro": "Las descargas incluyen los registros que coinciden con los filtros anteriores.",
+      "csv": "CSV",
+      "geojson": "GeoJSON",
+      "gpkg": "GeoPackage",
+      "pdf": "Resumen PDF",
+      "preparing": "Preparando…",
+      "failed": "La exportación falló. Inténtelo de nuevo.",
+      "api": "API REST",
+      "apiHint": "Punto de acceso GeoJSON autenticado — envíe el encabezado x-analyst-key. Ejemplo:",
+      "autoPdf": "{{count}} zona(s) alcanzaron el umbral de resumen automático ({{n}} informes en {{r}} m). Genere un PDF desde la vista del mapa de abajo.",
+      "copy": "Copiar",
+      "copied": "Copiado"
+    }
+  },
+  "app": {
+    "name": "GroundTruth",
+    "tagline": "Cartografía comunitaria de crisis"
+  },
+  "lang": {
+    "label": "Idioma"
+  },
+  "title": {
+    "reporter": "GroundTruth — Informar daños",
+    "analyst": "GroundTruth — Panel de analista"
+  },
+  "status": {
+    "online": "En línea",
+    "offline": "Sin conexión",
+    "offlineBanner": "Estás sin conexión. Tus informes se guardan en este dispositivo y se subirán automáticamente cuando vuelvas a conectarte."
+  },
+  "nav": {
+    "reporterView": "Vista de informante",
+    "analystView": "Vista de analista",
+    "openAnalyst": "Abrir el panel de analista",
+    "openReporter": "Abrir la vista de informante"
+  },
+  "welcome": {
+    "title": "Informa sobre daños en tu comunidad",
+    "intro": "Ayuda a los equipos de respuesta a encontrar personas y edificios dañados. Un informe toma alrededor de un minuto y no requiere cuenta.",
+    "offlineReady": "Funciona sin conexión — puedes informar incluso sin señal.",
+    "start": "Iniciar un informe"
+  },
+  "privacy": {
+    "statement": "Tu informe es anónimo. No se almacena ni se comparte ninguna información personal."
+  },
+  "counter": {
+    "contributions": "{{count}} informes enviados en tu zona"
+  },
+  "install": {
+    "button": "Instalar la aplicación"
+  },
+  "analyst": {
+    "placeholderTitle": "Panel de analista",
+    "placeholderBody": "El panel de analista (mapa, indicadores, exportaciones) se construirá en un paso posterior."
+  },
+  "common": {
+    "continue": "Continuar",
+    "skip": "Omitir",
+    "cancel": "Cancelar",
+    "gotIt": "Entendido",
+    "back": "Atrás",
+    "optional": "Opcional — omite si no estás seguro"
+  },
+  "photos": {
+    "title": "Agregar fotos",
+    "subtitle": "Una foto nos permite evaluar los daños. Basta una foto clara del edificio — cuantas más, mejor.",
+    "slot1": "Foto 1 — edificio completo",
+    "slot2": "Foto 2 — primer plano del daño",
+    "slot3": "Foto 3 — entorno",
+    "add": "Agregar foto",
+    "replace": "Reemplazar",
+    "remove": "Quitar",
+    "optional": "opcional",
+    "recommended": "recomendado",
+    "gpsFound": "Ubicación encontrada en esta foto",
+    "processing": "Procesando…",
+    "continue": "Continuar"
+  },
+  "guidance": {
+    "title": "Cómo tomar una foto útil",
+    "l1": "Capta el edificio completo desde el frente.",
+    "l2": "Toma un segundo primer plano de cualquier daño visible.",
+    "l3": "Ponte frente a la entrada principal para mejor precisión de GPS.",
+    "l4": "No fotografíes a personas — los rostros y datos personales no son necesarios y esto protege tu privacidad.",
+    "gotIt": "Entendido"
+  },
+  "location": {
+    "title": "Confirma la ubicación",
+    "subtitle": "Esto coloca tu informe en el mapa. Ningún método es obligatorio — usa el que puedas.",
+    "useGps": "Usar mi ubicación actual",
+    "gpsLocating": "Localizando…",
+    "gpsAccuracy": "Precisión: unos {{m}} m",
+    "gpsDenied": "Permiso de ubicación denegado. Puedes tocar el mapa o describir un punto de referencia.",
+    "gpsUnavailable": "La ubicación en vivo no está disponible. Puedes tocar el mapa o describir un punto de referencia.",
+    "tapMap": "O toca el mapa para colocar un marcador",
+    "landmarkLabel": "O describe un punto de referencia cercano",
+    "landmarkPlaceholder": "p. ej., cerca de la mezquita azul en la carretera principal",
+    "selected": "Ubicación seleccionada",
+    "methodEXIF": "GPS de la foto",
+    "methodLiveGPS": "Desde tu dispositivo",
+    "methodMapTap": "Marcado en el mapa",
+    "methodLandmark": "Según el punto de referencia",
+    "methodUnknown": "Sin definir — un analista puede dar seguimiento",
+    "none": "Aún no hay ubicación",
+    "noBlock": "Puedes continuar incluso sin ubicación.",
+    "continue": "Continuar"
+  },
+  "wizard": {
+    "stepPhotos": "Fotos",
+    "stepLocation": "Ubicación",
+    "stepHazard": "Emergencia",
+    "stepAssess": "Daños",
+    "stepQuestions": "Preguntas",
+    "stepReview": "Revisar",
+    "step": "Paso {{n}} de {{total}}"
+  },
+  "hazard": {
+    "title": "¿Qué tipo de emergencia es?",
+    "subtitle": "Elige la más cercana. Esto adapta las preguntas siguientes.",
+    "pickType": "Ahora elige el tipo específico:",
+    "group": {
+      "natural": "Peligro natural",
+      "tech": "Tecnológico / Industrial",
+      "human": "Crisis de origen humano"
+    },
+    "type": {
+      "earthquake": "Terremoto",
+      "flood": "Inundación",
+      "tsunami": "Tsunami",
+      "hurricane": "Huracán / Ciclón",
+      "wildfire": "Incendio forestal",
+      "explosion": "Explosión",
+      "chemical": "Incidente químico",
+      "conflict": "Conflicto",
+      "unrest": "Disturbios civiles"
+    }
+  },
+  "safety": {
+    "conflict": "Tu informe es completamente anónimo.",
+    "chemical": "No te acerques a la estructura. Informa solo desde una distancia segura."
+  },
+  "assess": {
+    "title": "Evaluación de daños",
+    "subtitle": "Nuestra IA sugiere un nivel de daño a partir de tu foto. La última palabra es tuya — confírmalo o cámbialo.",
+    "analyzing": "Analizando tu foto…",
+    "aiSuggests": "Sugerencia de la IA",
+    "confidence": "Confianza: {{pct}} %",
+    "aiInfra": "Tipo de edificio probable",
+    "mockNote": "Estimación de prototipo — se muestra un resultado de IA de ejemplo porque no hay clave configurada.",
+    "confirmHint": "Confirma o corrige el nivel de daño a continuación.",
+    "damageLegend": "Nivel de daño (tú lo confirmas)",
+    "infraLegend": "Tipo de edificio / infraestructura",
+    "offline": "Estás sin conexión — se omite la evaluación de IA. Elige el nivel de daño tú mismo.",
+    "noPhoto": "No se agregó ninguna foto — elige el nivel de daño tú mismo.",
+    "failed": "No se pudo ejecutar la evaluación de IA. Elige el nivel de daño tú mismo."
+  },
+  "damage": {
+    "minimal": "Mínimo",
+    "partial": "Parcial",
+    "complete": "Total",
+    "minimalDesc": "Sin daño estructural, o solo grietas superficiales finas.",
+    "partialDesc": "Grietas, inclinación o fallo parcial — dañado pero en pie.",
+    "completeDesc": "Colapso, inclinación grave o desplazamiento — inseguro."
+  },
+  "infra": {
+    "residential": "Residencial",
+    "residentialDesc": "Casas y apartamentos",
+    "commercial": "Comercial",
+    "commercialDesc": "Mercados, centros comerciales, tiendas, hoteles, bancos, industria",
+    "government": "Edificio gubernamental",
+    "governmentDesc": "Edificios administrativos, juzgados, policía, bomberos",
+    "utility": "Servicios públicos",
+    "utilityDesc": "Bombas de agua, centrales eléctricas, tratamiento de residuos",
+    "transport": "Transporte y comunicación",
+    "transportDesc": "Carreteras, antenas, puentes, estaciones de tren y autobús",
+    "community": "Comunitaria",
+    "communityDesc": "Escuelas, hospitales, salones comunitarios, baños públicos",
+    "publicspace": "Espacios públicos / recreación",
+    "publicspaceDesc": "Estadios, parques infantiles, edificios religiosos"
+  },
+  "questions": {
+    "title": "Unas preguntas rápidas",
+    "descLabel": "¿Algo más? (opcional)",
+    "descPlaceholder": "Describe lo que ves, en cualquier idioma.",
+    "continue": "Revisar informe"
+  },
+  "mandatory": {
+    "question": "¿Hay personas atrapadas o en peligro cerca de este lugar?",
+    "yes": "Sí",
+    "no": "No",
+    "idk": "No lo sé"
+  },
+  "q": {
+    "eq": {
+      "1": "¿Hay grietas visibles en las paredes o columnas?",
+      "2": "¿Está bloqueado el acceso por carretera a este lugar?"
+    },
+    "flood": {
+      "1": "Nivel aproximado del agua en esta estructura",
+      "2": "¿Es transitable el acceso por carretera o puente?"
+    },
+    "hur": {
+      "1": "¿Falta el techo parcial o totalmente?",
+      "2": "¿Hay cables eléctricos caídos cerca?"
+    },
+    "fire": {
+      "1": "¿Sigue activo el fuego cerca de este lugar?",
+      "2": "¿El humo limita la visibilidad?"
+    },
+    "tsu": {
+      "1": "¿Sigue habiendo agua en este lugar?",
+      "2": "¿Hay escombros que bloqueen el acceso?"
+    },
+    "conf": {
+      "1": "¿Es seguro acercarse a este lugar?",
+      "2": "¿Hay marcas visibles de explosión o impacto?"
+    },
+    "exp": {
+      "1": "¿Hay humos u olores inusuales visibles?",
+      "2": "¿Está evacuada la zona circundante?"
+    }
+  },
+  "opt": {
+    "yes": "Sí",
+    "no": "No",
+    "idk": "No lo sé",
+    "open": "Despejado",
+    "blocked": "Bloqueado",
+    "dry": "Seco",
+    "ankle": "Tobillo",
+    "knee": "Rodilla",
+    "waist": "Cintura",
+    "aboveWaist": "Por encima de la cintura",
+    "intact": "Intacto",
+    "partiallyMissing": "Parcialmente ausente",
+    "fullyMissing": "Totalmente ausente",
+    "active": "Activo",
+    "contained": "Contenido",
+    "extinguished": "Extinguido",
+    "yesFlowing": "Sí — corriendo",
+    "standing": "Estancada",
+    "receded": "Retirada"
+  },
+  "review": {
+    "title": "Revisa tu informe",
+    "subtitle": "Comprueba los detalles y envía. Puedes volver para cambiar cualquier cosa.",
+    "hazard": "Tipo de emergencia",
+    "damage": "Nivel de daño",
+    "infra": "Tipo de edificio",
+    "location": "Ubicación",
+    "danger": "¿Personas en peligro?",
+    "photos": "Fotos",
+    "priorityNote": "Este informe se marcará como prioritario para los equipos de respuesta.",
+    "submit": "Enviar informe",
+    "step4Pending": "Informe ensamblado. El guardado y la cola sin conexión se añaden en el siguiente paso."
+  },
+  "confirm": {
+    "titleOnline": "Informe enviado",
+    "titleOffline": "Informe guardado",
+    "bannerOnline": "Informe enviado correctamente.",
+    "bannerOffline": "Informe guardado — se enviará automáticamente cuando se restablezca la conexión.",
+    "damage": "Nivel de daño",
+    "infra": "Tipo de edificio",
+    "time": "Notificado a las",
+    "noLocation": "No se estableció ninguna ubicación para este informe.",
+    "priority": "Este informe se marcó como prioritario para los equipos de respuesta.",
+    "queuedNote": "Guardado en este dispositivo. En espera de subir: {{count}}.",
+    "another": "Enviar otro informe"
+  },
+  "queue": {
+    "pending": "En espera de subir: {{count}}",
+    "syncNow": "Sincronizar",
+    "syncing": "Sincronizando…"
+  }
+}

@@ -1,0 +1,332 @@
+{
+  "app": {
+    "name": "GroundTruth",
+    "tagline": "Community Crisis Mapping"
+  },
+  "lang": {
+    "label": "Language"
+  },
+  "title": {
+    "reporter": "GroundTruth — Report damage",
+    "analyst": "GroundTruth — Analyst Dashboard"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "offlineBanner": "You are offline. Your reports are saved on this device and will upload automatically when you reconnect."
+  },
+  "nav": {
+    "reporterView": "Reporter View",
+    "analystView": "Analyst View",
+    "openAnalyst": "Open Analyst Dashboard",
+    "openReporter": "Open Reporter View"
+  },
+  "welcome": {
+    "title": "Report damage in your community",
+    "intro": "Help responders find people and damaged buildings. A report takes about a minute and needs no account.",
+    "offlineReady": "Works offline — you can report even with no signal.",
+    "start": "Start a report"
+  },
+  "privacy": {
+    "statement": "Your report is anonymous. No personal information is stored or shared."
+  },
+  "counter": {
+    "contributions": "{{count}} reports submitted in your area"
+  },
+  "install": {
+    "button": "Install app"
+  },
+  "analyst": {
+    "placeholderTitle": "Analyst Dashboard",
+    "placeholderBody": "The analyst dashboard (map, flags, exports) is being built in a later step."
+  },
+  "a": {
+    "publicTab": "Public overview",
+    "analystTab": "Analyst records",
+    "heatmap": "Heatmap",
+    "coverage": "Coverage gaps",
+    "publicHint": "This public overview shows only grouped totals by area — never individual reports. Switch to Analyst records (access key required) to see full detail.",
+    "underserved": "Under-reported area — few reports here",
+    "cellReports": "{{count}} reports in this area",
+    "records": "{{count}} records",
+    "reportsInView": "{{count}} reports in view",
+    "empty": "No reports match these filters.",
+    "filters": "Filters",
+    "exportsSoon": "Export tools (CSV, GeoJSON, GeoPackage, PDF) are added in the next build step.",
+    "login": {
+      "title": "Analyst access",
+      "body": "Full records, photos and exports are restricted. Enter the analyst access key to continue.",
+      "label": "Access key",
+      "placeholder": "Enter access key",
+      "hint": "Prototype access key: undp-demo",
+      "error": "That access key was not accepted. Please try again.",
+      "button": "Unlock"
+    },
+    "filter": {
+      "all": "All",
+      "clear": "Clear",
+      "damage": "Damage level",
+      "hazard": "Emergency type",
+      "infra": "Building type",
+      "from": "From",
+      "to": "To",
+      "priority": "Priority only",
+      "conflict": "Conflicts only"
+    },
+    "detail": {
+      "title": "Report detail",
+      "priority": "Priority",
+      "conflict": "Conflict",
+      "userDamage": "Confirmed damage",
+      "aiDamage": "AI suggested",
+      "aiConfidence": "AI confidence",
+      "aiPercent": "AI damage estimate",
+      "hazard": "Emergency type",
+      "infra": "Building type",
+      "people": "People in danger?",
+      "time": "Reported at",
+      "method": "Location method",
+      "coordinates": "Coordinates",
+      "channel": "Channel",
+      "description": "Description",
+      "photos": "Photos",
+      "versions": "Version history",
+      "version": "Version {{n}}",
+      "translated": "English translation"
+    },
+    "export": {
+      "title": "Export & share",
+      "intro": "Downloads include the records matching the filters above.",
+      "csv": "CSV",
+      "geojson": "GeoJSON",
+      "gpkg": "GeoPackage",
+      "pdf": "PDF summary",
+      "preparing": "Preparing…",
+      "failed": "Export failed. Please try again.",
+      "api": "REST API",
+      "apiHint": "Authenticated GeoJSON endpoint — send the header x-analyst-key. Example:",
+      "autoPdf": "{{count}} area(s) reached the auto-summary threshold ({{n}} reports within {{r}} m). Generate a PDF from the map view below.",
+      "copy": "Copy",
+      "copied": "Copied"
+    }
+  },
+  "common": {
+    "continue": "Continue",
+    "skip": "Skip",
+    "cancel": "Cancel",
+    "gotIt": "Got it",
+    "back": "Back",
+    "optional": "Optional — skip if unsure"
+  },
+  "photos": {
+    "title": "Add photos",
+    "subtitle": "A photo lets us assess the damage. One clear photo of the building is enough — more is better.",
+    "slot1": "Photo 1 — full building",
+    "slot2": "Photo 2 — damage close-up",
+    "slot3": "Photo 3 — surroundings",
+    "add": "Add photo",
+    "replace": "Replace",
+    "remove": "Remove",
+    "optional": "optional",
+    "recommended": "recommended",
+    "gpsFound": "Location found in this photo",
+    "processing": "Processing…",
+    "continue": "Continue"
+  },
+  "guidance": {
+    "title": "How to take a useful photo",
+    "l1": "Capture the full building from the front.",
+    "l2": "Take a second close-up of any visible damage.",
+    "l3": "Stand in front of the main entrance for best GPS accuracy.",
+    "l4": "Do not photograph people — faces and personal details are not needed and this protects your privacy.",
+    "gotIt": "Got it"
+  },
+  "location": {
+    "title": "Confirm the location",
+    "subtitle": "This places your report on the map. No method is required — use whatever you can.",
+    "useGps": "Use my current location",
+    "gpsLocating": "Locating…",
+    "gpsAccuracy": "Accuracy: about {{m}} m",
+    "gpsDenied": "Location permission was denied. You can tap the map or describe a landmark instead.",
+    "gpsUnavailable": "Live location is unavailable. You can tap the map or describe a landmark instead.",
+    "tapMap": "Or tap the map to drop a pin",
+    "landmarkLabel": "Or describe a nearby landmark",
+    "landmarkPlaceholder": "e.g. near the blue mosque on the main road",
+    "selected": "Selected location",
+    "methodEXIF": "From photo GPS",
+    "methodLiveGPS": "From your device",
+    "methodMapTap": "Pinned on the map",
+    "methodLandmark": "From landmark description",
+    "methodUnknown": "Not set — an analyst can follow up",
+    "none": "No location set yet",
+    "noBlock": "You can continue even without a location.",
+    "continue": "Continue"
+  },
+  "wizard": {
+    "stepPhotos": "Photos",
+    "stepLocation": "Location",
+    "stepHazard": "Emergency",
+    "stepAssess": "Damage",
+    "stepQuestions": "Questions",
+    "stepReview": "Review",
+    "step": "Step {{n}} of {{total}}"
+  },
+  "hazard": {
+    "title": "What kind of emergency is this?",
+    "subtitle": "Pick the closest match. This tailors the questions that follow.",
+    "pickType": "Now choose the specific type:",
+    "group": {
+      "natural": "Natural hazard",
+      "tech": "Technological / Industrial",
+      "human": "Human-made crisis"
+    },
+    "type": {
+      "earthquake": "Earthquake",
+      "flood": "Flood",
+      "tsunami": "Tsunami",
+      "hurricane": "Hurricane / Cyclone",
+      "wildfire": "Wildfire",
+      "explosion": "Explosion",
+      "chemical": "Chemical incident",
+      "conflict": "Conflict",
+      "unrest": "Civil unrest"
+    }
+  },
+  "safety": {
+    "conflict": "Your report is completely anonymous.",
+    "chemical": "Do not approach the structure. Report from a safe distance only."
+  },
+  "assess": {
+    "title": "Damage assessment",
+    "subtitle": "Our AI suggests a damage level from your photo. You have the final say — confirm or change it.",
+    "analyzing": "Analysing your photo…",
+    "aiSuggests": "AI suggestion",
+    "confidence": "Confidence: {{pct}}%",
+    "aiInfra": "Likely building type",
+    "mockNote": "Prototype estimate — a sample AI result is shown because no AI key is configured.",
+    "confirmHint": "Confirm or correct the damage level below.",
+    "damageLegend": "Damage level (you confirm)",
+    "infraLegend": "Building / infrastructure type",
+    "offline": "You are offline — the AI assessment is skipped. Please choose the damage level yourself.",
+    "noPhoto": "No photo was added — please choose the damage level yourself.",
+    "failed": "The AI assessment could not run. Please choose the damage level yourself."
+  },
+  "damage": {
+    "minimal": "Minimal",
+    "partial": "Partial",
+    "complete": "Complete",
+    "minimalDesc": "No structural damage, or only hairline cosmetic cracks.",
+    "partialDesc": "Cracking, leaning or partial failure — damaged but standing.",
+    "completeDesc": "Collapse, severe leaning or displacement — unsafe."
+  },
+  "infra": {
+    "residential": "Residential",
+    "residentialDesc": "Houses and apartments",
+    "commercial": "Commercial",
+    "commercialDesc": "Markets, malls, shops, hotels, banks, industry",
+    "government": "Government building",
+    "governmentDesc": "Administrative buildings, courthouses, police, fire stations",
+    "utility": "Utility",
+    "utilityDesc": "Water pumps, power plants, waste treatment",
+    "transport": "Transport & communication",
+    "transportDesc": "Roads, cell towers, bridges, railway and bus stations",
+    "community": "Community",
+    "communityDesc": "Schools, hospitals, community halls, public toilets",
+    "publicspace": "Public space / recreation",
+    "publicspaceDesc": "Stadiums, playgrounds, religious buildings"
+  },
+  "questions": {
+    "title": "A few quick questions",
+    "descLabel": "Anything else? (optional)",
+    "descPlaceholder": "Describe what you see, in any language.",
+    "continue": "Review report"
+  },
+  "mandatory": {
+    "question": "Are there people trapped or in danger near this location?",
+    "yes": "Yes",
+    "no": "No",
+    "idk": "I don't know"
+  },
+  "q": {
+    "eq": {
+      "1": "Are there visible cracks in the walls or columns?",
+      "2": "Is road access to this location blocked?"
+    },
+    "flood": {
+      "1": "Approximate water level at this structure",
+      "2": "Is road or bridge access passable?"
+    },
+    "hur": {
+      "1": "Is the roof partially or fully missing?",
+      "2": "Are there downed power lines nearby?"
+    },
+    "fire": {
+      "1": "Is fire still active near this location?",
+      "2": "Is there smoke limiting visibility?"
+    },
+    "tsu": {
+      "1": "Is water still present at this location?",
+      "2": "Is debris blocking access?"
+    },
+    "conf": {
+      "1": "Is this location safe to approach?",
+      "2": "Are there visible blast or impact marks?"
+    },
+    "exp": {
+      "1": "Are there visible fumes or unusual odours?",
+      "2": "Is the surrounding area evacuated?"
+    }
+  },
+  "opt": {
+    "yes": "Yes",
+    "no": "No",
+    "idk": "I don't know",
+    "open": "Open",
+    "blocked": "Blocked",
+    "dry": "Dry",
+    "ankle": "Ankle",
+    "knee": "Knee",
+    "waist": "Waist",
+    "aboveWaist": "Above waist",
+    "intact": "Intact",
+    "partiallyMissing": "Partially missing",
+    "fullyMissing": "Fully missing",
+    "active": "Active",
+    "contained": "Contained",
+    "extinguished": "Extinguished",
+    "yesFlowing": "Yes — flowing",
+    "standing": "Standing",
+    "receded": "Receded"
+  },
+  "review": {
+    "title": "Review your report",
+    "subtitle": "Check the details, then submit. You can go back to change anything.",
+    "hazard": "Emergency type",
+    "damage": "Damage level",
+    "infra": "Building type",
+    "location": "Location",
+    "danger": "People in danger?",
+    "photos": "Photos",
+    "priorityNote": "This report will be flagged as priority for responders.",
+    "submit": "Submit report",
+    "step4Pending": "Report assembled successfully. Saving and the offline queue are added in the next build step."
+  },
+  "confirm": {
+    "titleOnline": "Report submitted",
+    "titleOffline": "Report saved",
+    "bannerOnline": "Report submitted successfully.",
+    "bannerOffline": "Report saved — it will upload automatically when you reconnect.",
+    "damage": "Damage level",
+    "infra": "Building type",
+    "time": "Reported at",
+    "noLocation": "No location was set for this report.",
+    "priority": "This report was flagged as priority for responders.",
+    "queuedNote": "Saved on this device. Waiting to upload: {{count}}.",
+    "another": "Submit another report"
+  },
+  "queue": {
+    "pending": "Waiting to upload: {{count}}",
+    "syncNow": "Sync now",
+    "syncing": "Syncing…"
+  }
+}

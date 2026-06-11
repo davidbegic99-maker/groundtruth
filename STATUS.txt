@@ -1,0 +1,201 @@
+GROUNDTRUTH — BUILD STATUS
+Last updated: 2026-06-11 (Step 7 in progress: README + both fixes DONE & verified; deploy next)
+Plain-English progress tracker. Deadline: 2026-06-23.
+
+STEP 7 PROGRESS (this session)
+  [DONE]    1. README.md written and verified (npm start banner, both view URLs ->
+               200, settings GET/PUT round-trip, REST API 401-without-key / filtered-
+               with-key all confirmed against the running server).
+  [DONE]    2. Fixed two shortcuts, both verified:
+               (a) AI model name in server/classify.js updated from the deprecated
+                   'claude-sonnet-4-20250514' to the current 'claude-sonnet-4-6'
+                   (overridable via ANTHROPIC_MODEL). Syntax checked; the /api/classify
+                   sample-mode path still returns a valid tier.
+               (b) Full-resolution photo now retained locally: report.js keeps the
+                   original file blob; submit.js saves it to a separate IndexedDB
+                   'originals' store that is NOT cleared when the compressed copy syncs.
+                   Verified in a real browser: full-res (5000B) kept locally, only the
+                   compressed copy (200B) uploaded to the server, queue emptied after
+                   upload, no console errors.
+  [PENDING] 3. Deploy to a public URL.
+  (Demo video script: handled separately — intentionally skipped here.)
+
+HOW THIS WAS CHECKED
+  This status was written by reading every source file directly and by actually
+  starting the server and calling its endpoints — not by trusting earlier notes.
+  Where the previous status and the real code disagreed, the code wins (see the
+  "CORRECTIONS" note at the bottom).
+
+The app is built in 7 steps. Local address while building: http://localhost:3000
+  - Reporter View (the public reporting app): /
+  - Analyst View (the UNDP dashboard):        /analyst.html
+Analyst access key for the prototype: undp-demo
+
+==================================================================
+1. FULLY COMPLETE  (built AND verified working in this audit)
+==================================================================
+
+STEP 1 — Foundation & app shell
+  - Server starts cleanly on Node 24 using Node's built-in database engine
+    (no fragile native install). Health, stats and settings endpoints all
+    answered correctly when tested live.
+  - The "5 reports within 200 metres" PDF rule is an EDITABLE SETTING, not
+    hard-coded. There are 11 such tunable settings stored in the database.
+  - All 6 UN languages are present and EXACTLY in step with each other
+    (188 text entries each, no gaps) for the whole Reporter flow. Arabic is
+    set up to mirror right-to-left.
+  - Offline-first app shell (service worker) and an installable app manifest.
+  - Two clearly labelled views: "Reporter View" and "Analyst View".
+
+STEP 2 — Reporter flow, part 1: photos & location
+  - Up to 3 photos; privacy guidance overlay before the first photo.
+  - Reads GPS + time from a photo's hidden data; full location fallback chain
+    (photo GPS -> live device GPS -> tap the map -> describe a landmark ->
+    accept with no location). A report is never blocked by missing location.
+  - Photos are shrunk in the browser and ALL hidden metadata is removed for
+    privacy; each photo gets a fingerprint (hash).
+  - Interactive map with real OpenStreetMap tiles and a draggable pin.
+
+STEP 3 — Reporter flow, part 2: hazard, AI, confirmation
+  - Two-step emergency picker covering all 9 hazard types.
+  - AI suggests a damage level + building type + a confidence score. It works
+    even with NO AI key (a built-in sample mode), so evaluators need nothing.
+    Tested live: returned a clean Minimal/Partial/Complete result.
+  - The AI's internal "damage percentage" is analyst-only and never shown to
+    the public.
+  - Confirm/correct screen; the mandatory "are people in danger?" question
+    sets the priority flag; two optional hazard-specific questions; safety
+    warnings for Conflict and Chemical incidents; a final review screen.
+
+STEP 4 — Submit & offline queue
+  - Submitting really saves. Online -> green "submitted" with a mini-map.
+    Offline -> orange "saved, will upload later" with a waiting count, then it
+    uploads automatically when the connection returns (plus a manual "Sync now"
+    button and best-effort background sync).
+  - Photos are stored AES-256 encrypted; device IDs are stored only as one-way
+    hashes; the photo's capture time is preserved (not the upload time); the
+    AI-vs-user conflict flag is computed; repeat buildings are versioned; and a
+    re-sent report is ignored so nothing duplicates.
+  - Verified live: a stored photo could be DECRYPTED back into a real image
+    (only with the analyst key; blocked without it).
+
+STEP 5 — Analyst dashboard: FULLY DONE AND VERIFIED IN THE BROWSER
+  Back-end (verified live earlier):
+  - Public data returns ONLY aggregated map "cells" (counts per damage level per
+    area): 15 located reports collapsed into 6 cells, no individual records.
+  - Analyst data is locked behind the access key: refused (401) without it,
+    returns all 16 full records with it. Photos, version history and filtering
+    all answer correctly.
+  - A realistic 16-report Istanbul demo dataset is loaded (two clusters plus
+    scattered points): 5 priority, 2 AI-conflict, one building with 3 versions,
+    one report with no location.
+
+  Front-end (finished and checked in a real browser on 2026-06-11):
+  - Public overview: Istanbul map with colour-coded aggregate cells, legend,
+    "reports in view" counter, and the privacy hint. Confirmed on screen.
+  - Analyst tab: login gate works (key "undp-demo"); 16 records list, priority-
+    sorted, with red Priority and yellow Conflict badges; 15 map markers; filters
+    populated; detail panel shows the analyst-only AI damage estimate, the
+    optional crisis questions, the 3-version history, and the decrypted photo.
+  - Heatmap and coverage-gap toggles both draw correctly.
+  - All 6 languages now carry the dashboard text (234 entries each, in step).
+  - Arabic confirmed mirroring fully right-to-left (brand right, controls flipped,
+    filters right-aligned) — the briefing's flagged failure point, tested and OK.
+  - No browser console errors at any point.
+
+STEP 6 — Exports & data sharing: FULLY DONE AND VERIFIED  (closes the GIS must-pass)
+  - CSV download: flat table with the mandatory fields plus submission_id, hazard,
+    channel, location method, priority flag, building id/version. Verified.
+  - GeoJSON download + REST API: proper point FeatureCollection (WGS84/CRS84) with
+    all mandatory fields as properties. Verified it parses; null-coordinate reports
+    kept with null geometry so nothing is dropped.
+  - GeoPackage (.gpkg) download: a genuine, spec-valid OGC GeoPackage built with no
+    third-party GIS library. Verified: correct SQLite + GPKG signature, all required
+    metadata tables, 4326/WGS84 CRS, decodable point geometry, correct bounding box.
+    It opens directly in GIS tools such as QGIS.
+  - REST API (/api/v1/reports): authenticated GET returning filtered GeoJSON. Honours
+    bbox, time range, damage tier, hazard, infrastructure, priority. Filters verified
+    (priority -> 5, Complete -> 5). The dashboard shows the live endpoint URL + a copy
+    button; the URL updates as filters change.
+  - PDF area summary (§13.3): on-demand "PDF summary" button generates a real, valid
+    one-page PDF (verified structurally: header, xref, fonts, embedded photo, EOF) with
+    tier breakdown chart, schematic cluster map, infrastructure list, dominant hazard,
+    time range, and the highest-confidence report's photo. Auto-trigger detection also
+    works: the dashboard flags areas that reached the configurable threshold (default
+    5 within 200 m) — it correctly found the 7-report Sultanahmet cluster.
+  - Post-sync AI de-duplication (§4.3): runs after each sync (never blocks submission),
+    computes a perceptual photo hash, and writes the analyst annotation. Verified it
+    produced the briefing's example phrasing for the 3-version building, incl. a
+    near-identical-photo note. Shows in the detail panel.
+  - Server-side translation (§10.4): LibreTranslate integration that stores the English
+    translation + detected language alongside the original. Optional and fails safe —
+    if no LibreTranslate endpoint is configured (the default offline demo) it is simply
+    skipped and the original text is kept. Enable via the LIBRETRANSLATE_URL env var.
+  - All new dashboard text added to all 6 languages (248 entries each, in step);
+    Arabic export UI confirmed translated and right-to-left; no console errors.
+  - All export/API/PDF/dedup endpoints are access-key protected (401 without the key).
+
+==================================================================
+2. PARTIALLY BUILT  (started, NOT yet working — needs finishing)
+==================================================================
+
+  (Nothing is in this state right now.)
+
+==================================================================
+3. NOT STARTED YET
+==================================================================
+
+STEP 7 — Deploy & documentation
+  - No README yet (required: how to open the app, how to test offline, how to
+    reach the analyst dashboard + the access key, where the export buttons are,
+    and the open-source AI production pathway wording the briefing mandates).
+  - No 2-minute demo video script yet.
+  - Not yet deployed to a free public web address for UNDP evaluators.
+
+==================================================================
+4. FILES THAT ARE BROKEN OR INCOMPLETE
+==================================================================
+  - (FIXED 2026-06-11) public/locales/*.json — the analyst-dashboard text
+      section was missing from all 6 files; it has now been added to all 6.
+  - (FIXED 2026-06-11) public/css/styles.css — the analyst-dashboard styling
+      (including the map height) was missing; it has now been added.
+  - .claude/settings.local.json  (minor, harmless)
+      Lists two helper scripts (verify-step4.mjs, _check.mjs) that no longer
+      exist. Stale permission entries only; no effect on the app.
+  - server/classify.js  (minor, only matters with a real AI key)
+      Uses an older AI model name. The free sample mode is unaffected. Worth
+      updating before plugging in a real key.
+
+  No broken files were found in the Reporter flow (Steps 1-4) or in the
+  analyst BACK-END — all of that ran correctly when tested.
+
+==================================================================
+5. THE THREE "MUST-PASS" REQUIREMENTS — where we stand
+==================================================================
+  1. Offline-first   — DONE for the core reporting flow (verified in Step 4).
+  2. Secure backend  — DONE for the core: AES-256 encrypted photos, one-way
+       device hashing, anonymous records, and an access-key-protected analyst
+       dashboard with the public view exposing aggregates only (verified live).
+  3. GIS interoperability — DONE (Step 6): spec-valid GeoJSON, GeoPackage and CSV
+       exports plus the authenticated filtered-GeoJSON REST API, all verified.
+
+  All three must-pass requirements are now met.
+
+==================================================================
+6. RECOMMENDED NEXT STEPS (in order)
+==================================================================
+  1. Step 7: write the README (how to open the app, test offline, reach the analyst
+     dashboard + the access key, where the export buttons are, the REST API usage,
+     and the open-source AI production-pathway wording the briefing mandates).
+  2. Step 7: write the 2-minute demo video script.
+  3. Step 7: deploy to a free public URL for UNDP evaluators.
+  (Optional polish: update the AI model name in classify.js; add PNG app icons.)
+
+==================================================================
+CORRECTIONS vs the previous STATUS.txt
+==================================================================
+  - Previous note said the new dashboard text was "only in English". In fact it
+    is in NO language at all, English included — so the dashboard needs the text
+    added from scratch in all 6, not just translated into 5.
+  - "4 reports with photos" is technically true, but all four point to the SAME
+    single demo image (one encrypted photo is stored). Fine for the demo.

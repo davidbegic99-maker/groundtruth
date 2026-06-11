@@ -1,0 +1,12 @@
+node_modules/
+server/data/
+*.log
+.env
+.DS_Store
+
+# Internal strategy doc — not for a public repo (the app does not need it to run).
+# Remove this line if your repo is private and you want it tracked.
+GroundTruth_ClaudeCode_Briefing_v2.txt
+
+# Local Claude Code permission allowlist (machine-specific).
+.claude/settings.local.json

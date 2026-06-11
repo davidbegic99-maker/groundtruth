@@ -1,0 +1,16 @@
+{
+  "name": "GroundTruth — Community Crisis Mapping",
+  "short_name": "GroundTruth",
+  "description": "Report damage in your community. Offline-first crisis reporting for UNDP.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "en",
+  "dir": "auto",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
