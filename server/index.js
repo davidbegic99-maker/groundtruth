@@ -15,6 +15,7 @@ import { getRows, toCSV, toGeoJSON, toGPKG } from './exports.js';
 import { areaSummaryPDF, autoPdfClusters } from './pdf.js';
 import { runDedup } from './dedup.js';
 import { translateToEnglish, translationEnabled } from './translate.js';
+import { seedIfEmpty } from './seed.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
@@ -241,6 +242,24 @@ app.get('/api/photo/:hash', requireAnalyst, (req, res) => {
   res.setHeader('Cache-Control', 'private, max-age=300');
   res.send(Buffer.from(p.data));
 });
+
+// Optional one-time demo seeding for fresh deployments where the database starts
+// empty (e.g. the Render free tier with an ephemeral disk). Set SEED_ON_BOOT=1 to
+// load the demo dataset ONLY when there are no reports yet — it never overwrites
+// real data. Off by default (local dev uses scripts/seed-demo.mjs instead).
+const seedFlag = process.env.SEED_ON_BOOT;
+if (seedFlag && seedFlag !== '0' && seedFlag.toLowerCase() !== 'false') {
+  try {
+    const r = seedIfEmpty();
+    console.log(
+      r.skipped
+        ? `[seed-on-boot] skipped — ${r.count} report(s) already present`
+        : `[seed-on-boot] seeded ${r.seeded} demo reports (priority ${r.priority}, conflict ${r.conflict}, extra versions ${r.extraVersions})`
+    );
+  } catch (e) {
+    console.warn('[seed-on-boot] failed:', e.message);
+  }
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

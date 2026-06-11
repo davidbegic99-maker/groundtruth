@@ -338,6 +338,7 @@ All of these are optional — the prototype works fully without them.
 | `GT_PHOTO_KEY` | 32-byte AES key for photo encryption (hex, base64, or passphrase). |
 | `LIBRETRANSLATE_URL` | Enables server-side translation of free-text descriptions into English via a [LibreTranslate](https://libretranslate.com/) instance (open source, self-hostable, 50+ languages). |
 | `LIBRETRANSLATE_API_KEY` | API key for the LibreTranslate instance, if it requires one. |
+| `SEED_ON_BOOT` | Set to `1` to load the 16-report demo dataset at startup **only when the database is empty** (used by the Render Blueprint so a fresh deploy shows data). Never overwrites existing reports. |
 | `PORT` | Server port (default `3000`). |
 
 When LibreTranslate is configured, the original user text **and** an English
@@ -358,6 +359,11 @@ node scripts/seed-demo.mjs
 
 This **wipes** any existing reports and loads the curated demo set through the real
 submission pipeline (encrypted photos, hashed device IDs, versioning, conflict flags).
+
+**On a deployed instance** (where you can't easily run a script), set the
+`SEED_ON_BOOT=1` environment variable instead. The server then loads the same demo
+dataset on startup *only if the database is empty* — it never overwrites real reports.
+The included Render Blueprint (`render.yaml`) sets this for you.
 
 ---
 

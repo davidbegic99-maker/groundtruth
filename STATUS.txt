@@ -1,5 +1,5 @@
 GROUNDTRUTH — BUILD STATUS
-Last updated: 2026-06-11 (Step 7 in progress: README + both fixes DONE & verified; deploy next)
+Last updated: 2026-06-11 (Step 7: README + both fixes DONE; deploy PREPARED & committed, awaiting your GitHub push + Render apply)
 Plain-English progress tracker. Deadline: 2026-06-23.
 
 STEP 7 PROGRESS (this session)
@@ -17,7 +17,20 @@ STEP 7 PROGRESS (this session)
                    Verified in a real browser: full-res (5000B) kept locally, only the
                    compressed copy (200B) uploaded to the server, queue emptied after
                    upload, no console errors.
-  [PENDING] 3. Deploy to a public URL.
+  [PREPARED] 3. Deploy to a public URL. Everything that does NOT need your accounts is
+               done: render.yaml Blueprint added; README deploy section written; git
+               repo initialized and committed. Secrets/internal docs excluded from the
+               repo (node_modules, server/data + photo key, the internal briefing, local
+               Claude settings).
+               + SEED_ON_BOOT: a fresh deployment (empty DB) auto-loads the 16-report
+                 demo dataset on startup so evaluators see a populated map immediately —
+                 only when empty, never overwriting real data. Verified: seeds 16 with
+                 dedup annotation on boot, skips on the next boot. render.yaml sets it.
+                 Demo dataset is now single-source in server/seed.js (used by both the
+                 boot seeder and scripts/seed-demo.mjs).
+               REMAINING (needs your GitHub + Render accounts): create a GitHub repo,
+               `git push`, then Render → New + → Blueprint → Apply. Once you have the
+               live URL, paste it back and it can be verified + added to the README.
   (Demo video script: handled separately — intentionally skipped here.)
 
 HOW THIS WAS CHECKED
