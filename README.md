@@ -432,7 +432,7 @@ near one-click deploy.
   data, use a paid instance with a disk mounted at `server/data`, or set `GT_DB_PATH`
   and `GT_PHOTO_KEY` so data and key survive restarts.
 
-> **Live demo URL:** _to be added once deployed._
+> **Live demo URL:** https://groundtruth-9jr7.onrender.com
 
 For UNDP evaluators, the deployed app is accessible without login for the Reporter View
 and the public dashboard; the Analyst records tab uses the access key `undp-demo`.
