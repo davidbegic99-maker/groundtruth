@@ -77,6 +77,7 @@
       timestamp: report.timestamp || new Date().toISOString(), // capture time
       lat: report.lat, lon: report.lon,
       location_method: report.location_method,
+      location_confidence: report.location_confidence,
       landmark_text: report.landmark_text,
       hazard_type: report.hazard_type,
       infrastructure_type: report.infrastructure_type,
@@ -124,6 +125,7 @@
       timestamp: item.timestamp,
       lat: item.lat, lon: item.lon,
       location_method: item.location_method,
+      location_confidence: item.location_confidence,
       landmark_text: item.landmark_text,
       hazard_type: item.hazard_type,
       infrastructure_type: item.infrastructure_type,

@@ -17,7 +17,8 @@
     lat: null,
     lon: null,
     accuracy: null,
-    location_method: null, // EXIF | LiveGPS | MapTap | Landmark | Unknown
+    location_method: null,     // EXIF | LiveGPS | MapTap | Landmark | Unknown
+    location_confidence: null, // normal | low (low = approximate, e.g. landmark-only)
     landmark_text: null,
     timestamp: null        // capture time from EXIF; null -> defaults to now at submit
   };
@@ -48,7 +49,11 @@
     });
 
     const landmark = document.getElementById('landmark-input');
-    landmark?.addEventListener('input', () => { state.landmark_text = landmark.value.trim() || null; });
+    landmark?.addEventListener('input', () => {
+      state.landmark_text = landmark.value.trim() || null;
+      updateLocStatus();
+      updateLocationContinue();
+    });
 
     // Re-render translated bits when language changes.
     document.addEventListener('gt:languagechanged', () => {
@@ -82,6 +87,7 @@
     state.photos = [];
     state.lat = state.lon = state.accuracy = null;
     state.location_method = null;
+    state.location_confidence = null;
     state.landmark_text = null;
     state.timestamp = null;
     guidanceShownThisReport = false;
@@ -96,6 +102,7 @@
     initMapOnce();
     setTimeout(() => { if (map) { map.invalidateSize(); syncMap(); } }, 60);
     updateLocStatus();
+    updateLocationContinue();
   }
 
   function goToNextStep() {
@@ -258,7 +265,12 @@
     // hasn't picked another method, clear it back so the chain can re-resolve.
     if (state.location_method === 'EXIF') {
       const anyGps = state.photos.find((ph) => ph && ph.exifLat != null);
-      if (!anyGps) { state.lat = state.lon = null; state.location_method = null; syncMap(); updateLocStatus(); }
+      if (!anyGps) {
+        state.lat = state.lon = null;
+        state.location_method = null;
+        state.location_confidence = null;
+        syncMap(); updateLocStatus(); updateLocationContinue();
+      }
     }
     renderPhotoGrid();
   }
@@ -328,9 +340,13 @@
     state.lat = lat;
     state.lon = lon;
     state.location_method = method;
+    // A real coordinate from EXIF / live GPS / a deliberate map tap is normal
+    // confidence. Landmark-only fallback (no coordinate yet) is handled at commit.
+    state.location_confidence = 'normal';
     state.accuracy = accuracy;
     syncMap();
     updateLocStatus();
+    updateLocationContinue();
   }
 
   function useLiveGps() {
@@ -412,7 +428,16 @@
     const el = document.getElementById('loc-status');
     if (!el) return;
     const label = methodLabel();
-    if (state.lat == null && state.location_method !== 'Landmark') {
+    if (state.lat == null) {
+      // No coordinate yet. If the user has typed a landmark, reflect that it
+      // will be used as an approximate location; otherwise prompt for one.
+      const lm = (document.getElementById('landmark-input')?.value || '').trim();
+      if (lm) {
+        el.className = 'loc-status set';
+        el.innerHTML = `<strong>${escapeHtml(t('location.selected'))}:</strong> ${escapeHtml(t('location.methodLandmark'))}` +
+          `<br><span class="loc-coords">${escapeHtml(t('location.landmarkApprox'))}</span>`;
+        return;
+      }
       el.className = 'loc-status none';
       el.textContent = t('location.none');
       return;
@@ -434,13 +459,45 @@
     if (el) { el.className = 'loc-status msg'; el.textContent = msg; }
   }
 
+  // True once the user has resolved a location one of the two required ways:
+  // a real coordinate (EXIF / live GPS / map tap) OR a typed landmark.
+  function hasResolvableLocation() {
+    const lm = (document.getElementById('landmark-input')?.value || '').trim();
+    return (state.lat != null && state.lon != null) || lm.length > 0;
+  }
+
+  // Gate the location-step Continue button: it stays disabled until the user
+  // taps the map or types a landmark, so a report can no longer proceed with no
+  // location at all (every record must end up with a coordinate — export schema).
+  function updateLocationContinue() {
+    const btn = document.getElementById('btn-location-continue');
+    if (btn) btn.disabled = !hasResolvableLocation();
+  }
+
   function commitLocation() {
-    if (state.lat == null && state.lon == null) {
-      const lm = (document.getElementById('landmark-input')?.value || '').trim();
-      if (lm) { state.location_method = 'Landmark'; state.landmark_text = lm; }
-      else { state.location_method = 'Unknown'; state.landmark_text = null; }
+    const lm = (document.getElementById('landmark-input')?.value || '').trim();
+    if (state.lat != null && state.lon != null) {
+      // A real coordinate is set (EXIF / live GPS / map tap). If the user ALSO
+      // typed a landmark, keep it as a supplementary field; the coordinate wins.
+      state.landmark_text = lm || null;
+      if (!state.location_confidence) state.location_confidence = 'normal';
+    } else if (lm) {
+      // Landmark only — no coordinate was tapped. Pin the report at the current
+      // map centre as an APPROXIMATE fallback (so the record still carries a
+      // coordinate) and flag it low-confidence with method 'Landmark', so an
+      // analyst can see it is approximate and geocode the landmark text later.
+      const center = map ? map.getCenter() : null;
+      state.lat = center ? center.lat : null;
+      state.lon = center ? center.lng : null;
+      state.location_method = 'Landmark';
+      state.location_confidence = 'low';
+      state.landmark_text = lm;
     } else {
-      state.landmark_text = null; // method reflects the coordinate source
+      // No coordinate and no landmark. Continue is disabled in this state, so
+      // this is only a defensive fallback and never reached in normal use.
+      state.location_method = 'Unknown';
+      state.location_confidence = null;
+      state.landmark_text = null;
     }
   }
 

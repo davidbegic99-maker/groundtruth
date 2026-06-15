@@ -20,9 +20,12 @@ const LOCATION_METHODS = ['EXIF', 'LiveGPS', 'MapTap', 'Landmark', 'CellTower', 
 const PEOPLE = ['Yes', 'No', 'IDontKnow'];
 const DEBRIS = ['Yes', 'No', 'Unknown'];
 
+const LOCATION_CONFIDENCES = ['normal', 'low'];
+
 const insert = db.prepare(`
 INSERT OR IGNORE INTO submissions (
   submission_id, channel, timestamp, lat, lon, location_method, landmark_text,
+  location_confidence,
   hazard_type, infrastructure_type, damage_classification,
   ai_suggested_damage, ai_confidence, ai_damage_percentage, conflict_flag,
   people_in_danger, priority_flag,
@@ -32,6 +35,7 @@ INSERT OR IGNORE INTO submissions (
   received_at, device_hash
 ) VALUES (
   @submission_id, @channel, @timestamp, @lat, @lon, @location_method, @landmark_text,
+  @location_confidence,
   @hazard_type, @infrastructure_type, @damage_classification,
   @ai_suggested_damage, @ai_confidence, @ai_damage_percentage, @conflict_flag,
   @people_in_danger, @priority_flag,
@@ -78,15 +82,26 @@ export function insertSubmission(payload) {
     ? crypto.createHash('sha256').update(String(payload.device_token)).digest('hex')
     : null;
 
+  const location_method = LOCATION_METHODS.includes(payload.location_method)
+    ? payload.location_method
+    : (lat != null ? 'MapTap' : 'Unknown');
+
+  // Location confidence (§9): 'low' marks an approximate coordinate an analyst
+  // should treat with care and refine — e.g. a landmark-only report pinned at the
+  // map centre, or cell-tower triangulation. Trust an explicit client value, else
+  // derive it from the method so older clients and the seed stay consistent.
+  const location_confidence = LOCATION_CONFIDENCES.includes(payload.location_confidence)
+    ? payload.location_confidence
+    : (location_method === 'Landmark' || location_method === 'CellTower' ? 'low' : 'normal');
+
   const record = {
     submission_id: id,
     channel: 'PWA',
     timestamp: str(payload.timestamp) || new Date().toISOString(), // CAPTURE time, not sync time
     lat, lon,
-    location_method: LOCATION_METHODS.includes(payload.location_method)
-      ? payload.location_method
-      : (lat != null ? 'MapTap' : 'Unknown'),
+    location_method,
     landmark_text: str(payload.landmark_text),
+    location_confidence,
     hazard_type: HAZARD_TYPES.includes(payload.hazard_type) ? payload.hazard_type : null,
     infrastructure_type: INFRASTRUCTURE_TYPES.includes(payload.infrastructure_type) ? payload.infrastructure_type : null,
     damage_classification: userDamage,

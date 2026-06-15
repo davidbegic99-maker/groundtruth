@@ -28,7 +28,7 @@ export function getRows(filters) {
 const CSV_COLUMNS = [
   'submission_id', 'lat', 'lon', 'timestamp',
   'damage_classification', 'infrastructure_type',
-  'hazard_type', 'channel', 'location_method', 'priority_flag',
+  'hazard_type', 'channel', 'location_method', 'location_confidence', 'landmark_text', 'priority_flag',
   'building_id', 'version_number',
 ];
 
@@ -66,6 +66,8 @@ export function toGeoJSON(rows) {
         hazard_type: r.hazard_type,
         channel: r.channel,
         location_method: r.location_method,
+        location_confidence: r.location_confidence,
+        landmark_text: r.landmark_text,
         priority_flag: !!r.priority_flag,
         conflict_flag: !!r.conflict_flag,
         building_id: r.building_id,

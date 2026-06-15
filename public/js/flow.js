@@ -410,6 +410,7 @@
       lat: state.lat,
       lon: state.lon,
       location_method: state.location_method,
+      location_confidence: state.location_confidence,
       landmark_text: state.landmark_text,
       hazard_type: state.hazard_type,
       infrastructure_type: state.infrastructure_type,

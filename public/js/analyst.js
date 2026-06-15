@@ -225,6 +225,12 @@
     const el = document.getElementById('detail');
     el.hidden = false;
     const coords = rec.lat != null ? `${rec.lat.toFixed(5)}, ${rec.lon.toFixed(5)}` : '—';
+    const lowConf = rec.location_confidence === 'low';
+    // Mark an approximate coordinate (e.g. a landmark-only report pinned at the
+    // map centre) so the analyst treats it with care and geocodes the landmark.
+    const coordsCell = rec.lat != null && lowConf
+      ? `${esc(coords)} <span class="loc-approx">${esc(t('a.detail.approxFlag'))}</span>`
+      : esc(coords);
     let badges = '';
     if (rec.priority_flag) badges += `<span class="badge prio">⚑ ${esc(t('a.detail.priority'))}</span>`;
     if (rec.conflict_flag) badges += `<span class="badge conf">⚠ ${esc(t('a.detail.conflict'))}</span>`;
@@ -239,9 +245,13 @@
       [t('a.detail.people'), esc(peopleLabel(rec.people_in_danger))],
       [t('a.detail.time'), esc(fmtTime(rec.timestamp))],
       [t('a.detail.method'), esc(methodLabel(rec.location_method))],
-      [t('a.detail.coordinates'), esc(coords)],
+      [t('a.detail.coordinates'), coordsCell],
       [t('a.detail.channel'), esc(rec.channel || 'PWA')],
     ];
+
+    // Landmark description, when present (supplementary or the basis for an
+    // approximate landmark-only coordinate the analyst can geocode later).
+    if (rec.landmark_text) rows.push([t('a.detail.landmark'), esc(rec.landmark_text)]);
 
     // Optional crisis-specific answers
     const qs = D().questionsFor(rec.hazard_type);

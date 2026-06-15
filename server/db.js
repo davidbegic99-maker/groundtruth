@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS submissions (
   lon                    REAL,                    -- decimal degrees, nullable
   location_method        TEXT,                    -- EXIF / LiveGPS / MapTap / Landmark / CellTower / Unknown
   landmark_text          TEXT,                    -- only if location_method = Landmark
+  location_confidence    TEXT,                    -- 'normal' / 'low'. Low = coordinate is approximate
+                                                  -- (e.g. landmark-only: pinned at map centre, geocode later)
   hazard_type            TEXT,                    -- Section 6 enum
   infrastructure_type    TEXT,                    -- Section 5 enum
   damage_classification  TEXT,                    -- Minimal / Partial / Complete (USER CONFIRMED)
@@ -93,6 +95,15 @@ CREATE TABLE IF NOT EXISTS settings (
   description  TEXT
 );
 `);
+
+// ---------------------------------------------------------------------------
+// Lightweight migrations: add columns introduced after the initial release so
+// an existing database (e.g. local dev) gains them without a manual reset.
+// ---------------------------------------------------------------------------
+const submissionColumns = db.prepare('PRAGMA table_info(submissions)').all().map((c) => c.name);
+if (!submissionColumns.includes('location_confidence')) {
+  db.exec('ALTER TABLE submissions ADD COLUMN location_confidence TEXT');
+}
 
 // ---------------------------------------------------------------------------
 // Seed default settings (only if missing — never overwrite admin changes)

@@ -569,6 +569,13 @@ h2 { font-size: 1.2rem; margin: 0 0 8px; }
 .badge.prio { background: #fdecec; color: #8a1c1c; border: 1px solid var(--priority); }
 .badge.conf { background: #fff7e6; color: #8a5a00; border: 1px solid var(--conflict); }
 
+/* Approximate-coordinate flag in the detail panel (low-confidence location). */
+.loc-approx {
+  display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700; background: #fff7e6; color: #8a5a00;
+  border: 1px solid var(--conflict); white-space: nowrap;
+}
+
 /* ---------- Detail panel ---------- */
 .detail-head { display: flex; align-items: center; justify-content: space-between; }
 .detail-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }

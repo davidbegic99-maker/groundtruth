@@ -2,7 +2,7 @@
  * Pre-caches the shell + libraries + locales so the app loads with no network.
  * Strategy: cache-first for same-origin static assets (with runtime caching),
  * network-first for /api/ GETs, cross-origin (map tiles) passed through. */
-const CACHE = 'gt-shell-v6';
+const CACHE = 'gt-shell-v7';
 
 const ASSETS = [
   '/',
