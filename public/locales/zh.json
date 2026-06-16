@@ -314,6 +314,7 @@
     "photos": "照片",
     "priorityNote": "此报告将被标记为优先，供救援人员处理。",
     "submit": "提交报告",
+    "submitError": "保存报告时出错。请重试。",
     "step4Pending": "报告已成功汇总。保存与离线队列将在下一构建步骤中加入。"
   },
   "confirm": {

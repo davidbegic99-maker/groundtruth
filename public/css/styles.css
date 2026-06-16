@@ -407,6 +407,17 @@ h2 { font-size: 1.2rem; margin: 0 0 8px; }
 .review-list dd.tier-par { color: #b8860b; }
 .review-list dd.tier-com { color: var(--tier-complete); }
 .review-list dd.review-priority { color: var(--priority); }
+/* Approximate (landmark) location cell — stacks the label, coordinate and note. */
+.review-list dd.review-approx { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.review-approx-label { color: #92400e; font-weight: 700; }
+.review-approx .review-coords { font-weight: 600; font-variant-numeric: tabular-nums; }
+.review-approx-note { font-weight: 400; font-size: 0.8rem; color: var(--text-muted); text-align: end; }
+.review-approx .review-landmark { font-weight: 400; font-size: 0.85rem; color: var(--text); }
+/* Submit failure notice — submit must never fail silently. */
+.submit-error {
+  margin: 10px 0 0; background: #fdecec; border: 1px solid var(--priority);
+  color: #8a1c1c; border-radius: 10px; padding: 10px 12px; font-weight: 600; font-size: 0.9rem;
+}
 .review-flag.priority {
   margin-top: 12px; background: #fdecec; border: 1px solid var(--priority);
   color: #8a1c1c; border-radius: 10px; padding: 10px 12px; font-weight: 600; font-size: 0.9rem;
@@ -508,6 +519,11 @@ h2 { font-size: 1.2rem; margin: 0 0 8px; }
 }
 .mk-badge.prio { background: var(--priority); }
 .mk-badge.conf { background: var(--conflict); color: #3a2c00; inset-inline-end: auto; inset-inline-start: -8px; }
+
+/* Standard teardrop map-pin (reporter location + confirmation maps). Inline SVG in
+   a divIcon — strip the default divIcon white box and let the drop-shadow show. */
+.gt-pin { background: none; border: none; }
+.gt-pin svg { display: block; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.4)); }
 
 /* ---------- Public cell popup ---------- */
 .cell-pop { font-size: 0.86rem; min-width: 150px; }

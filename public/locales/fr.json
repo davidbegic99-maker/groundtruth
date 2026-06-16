@@ -314,6 +314,7 @@
     "photos": "Photos",
     "priorityNote": "Ce signalement sera marqué comme prioritaire pour les secours.",
     "submit": "Envoyer le signalement",
+    "submitError": "Une erreur s'est produite lors de l'enregistrement de votre signalement. Veuillez réessayer.",
     "step4Pending": "Signalement assemblé. L'enregistrement et la file d'attente hors ligne seront ajoutés à l'étape suivante."
   },
   "confirm": {

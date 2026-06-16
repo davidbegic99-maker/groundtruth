@@ -314,6 +314,7 @@
     "photos": "Photos",
     "priorityNote": "This report will be flagged as priority for responders.",
     "submit": "Submit report",
+    "submitError": "Something went wrong while saving your report. Please try again.",
     "step4Pending": "Report assembled successfully. Saving and the offline queue are added in the next build step."
   },
   "confirm": {

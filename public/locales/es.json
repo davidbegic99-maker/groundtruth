@@ -314,6 +314,7 @@
     "photos": "Fotos",
     "priorityNote": "Este informe se marcará como prioritario para los equipos de respuesta.",
     "submit": "Enviar informe",
+    "submitError": "Se produjo un error al guardar tu informe. Inténtalo de nuevo.",
     "step4Pending": "Informe ensamblado. El guardado y la cola sin conexión se añaden en el siguiente paso."
   },
   "confirm": {

@@ -384,11 +384,6 @@
 
   function initMapOnce() {
     if (map || typeof L === 'undefined') return;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: '/vendor/images/marker-icon-2x.png',
-      iconUrl: '/vendor/images/marker-icon.png',
-      shadowUrl: '/vendor/images/marker-shadow.png'
-    });
     const start = (state.lat != null) ? [state.lat, state.lon] : [20, 0];
     const zoom = (state.lat != null) ? 17 : 2;
     map = L.map('map', { zoomControl: true }).setView(start, zoom);
@@ -424,13 +419,37 @@
     } catch (_) { /* offline before first cache, or file missing — skip overlay */ }
   }
 
-  // Return the centroid of the building footprint containing (lat, lon), or null.
+  // How close a tap must be (metres) to a building to snap to it when it didn't
+  // land strictly inside any footprint.
+  const SNAP_RADIUS_M = 25;
+
+  // Snap a tap to a building centroid: a tap strictly INSIDE a footprint snaps to
+  // that building; otherwise the tap snaps to the centroid of the NEAREST building
+  // whose centroid is within SNAP_RADIUS_M. If nothing is near enough, returns null
+  // and the caller drops the pin exactly where the user tapped.
   function snapToBuilding(lat, lon) {
+    let nearest = null;
+    let nearestDist = Infinity;
     for (const f of footprintFeatures) {
       const ring = outerRing(f);
-      if (ring && pointInRing(lat, lon, ring)) return polygonCentroid(ring);
+      if (!ring) continue;
+      if (pointInRing(lat, lon, ring)) return polygonCentroid(ring); // inside wins outright
+      const c = polygonCentroid(ring);
+      const d = metresBetween(lat, lon, c.lat, c.lon);
+      if (d <= SNAP_RADIUS_M && d < nearestDist) { nearest = c; nearestDist = d; }
     }
-    return null;
+    return nearest; // nearest building within range, or null for a free-placed pin
+  }
+
+  // Great-circle distance in metres (haversine).
+  function metresBetween(aLat, aLon, bLat, bLon) {
+    const R = 6371000;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(bLat - aLat);
+    const dLon = toRad(bLon - aLon);
+    const s = Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
   }
 
   function outerRing(feature) {
@@ -481,6 +500,22 @@
     return { lat: oy + cy / (6 * area), lon: ox + cx / (6 * area) };
   }
 
+  // A clear, standard teardrop map-pin as an inline-SVG divIcon. Avoids Leaflet's
+  // default PNG marker (whose auto-detected imagePath doubled onto our absolute
+  // icon URLs produced a 404 / broken-image placeholder) and needs no image files.
+  function pinIcon() {
+    return L.divIcon({
+      className: 'gt-pin',
+      html: '<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<path d="M14 1C7 1 1.5 6.5 1.5 13.5c0 8.7 11 24 12 25.2.3.4.7.4 1 0 1-1.2 12-16.5 12-25.2C26.5 6.5 21 1 14 1z" ' +
+        'fill="#d32f2f" stroke="#ffffff" stroke-width="2"/>' +
+        '<circle cx="14" cy="13.5" r="4.8" fill="#ffffff"/></svg>',
+      iconSize: [28, 40],
+      iconAnchor: [14, 39],   // tip of the teardrop sits on the point
+      popupAnchor: [0, -34],
+    });
+  }
+
   function syncMap() {
     if (!map) return;
     if (accuracyCircle) { map.removeLayer(accuracyCircle); accuracyCircle = null; }
@@ -490,7 +525,7 @@
     }
     const ll = [state.lat, state.lon];
     if (!marker) {
-      marker = L.marker(ll, { draggable: true }).addTo(map);
+      marker = L.marker(ll, { draggable: true, icon: pinIcon() }).addTo(map);
       marker.on('dragend', () => {
         const p = marker.getLatLng();
         setCoords(p.lat, p.lng, 'MapTap', null);

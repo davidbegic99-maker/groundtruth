@@ -340,17 +340,37 @@
     if (!el) return;
     const photos = (state.photos || []).filter(Boolean);
     const coords = state.lat != null ? `${state.lat.toFixed(5)}, ${state.lon.toFixed(5)}` : '—';
+
+    // Mirror the Location step: a low-confidence (landmark/approximate) location is
+    // labelled "Approximate location" with the landmark note, so a placeholder-looking
+    // coordinate (e.g. a landmark pinned at the map centre) doesn't make the reporter
+    // doubt their submission. A precise device-GPS / map-tap coordinate stays normal.
+    const approx = state.location_confidence === 'low' && state.lat != null;
+    let locationCell, locationCls = '';
+    if (approx) {
+      locationCls = 'review-approx';
+      locationCell =
+        `<span class="review-approx-label">${escapeHtml(t('location.methodLandmark'))}</span>` +
+        `<span class="review-coords">${escapeHtml(coords)}</span>` +
+        `<span class="review-approx-note">${escapeHtml(t('location.landmarkApprox'))}</span>` +
+        (state.landmark_text ? `<span class="review-landmark">${escapeHtml(state.landmark_text)}</span>` : '');
+    } else {
+      locationCell = escapeHtml(coords);
+    }
+
     const rows = [
       [t('review.hazard'), state.hazard_type ? D().hazardLabel(state.hazard_type) : '—'],
       [t('review.damage'), state.damage_classification ? D().damageLabel(state.damage_classification) : '—', D().damageClass(state.damage_classification)],
       [t('review.infra'), state.infrastructure_type ? D().infraLabel(state.infrastructure_type) : '—'],
-      [t('review.location'), coords],
+      [t('review.location'), locationCell, locationCls, true],
       [t('review.danger'), state.people_in_danger ? mandatoryLabel(state.people_in_danger) : '—', state.priority_flag ? 'review-priority' : ''],
       [t('review.photos'), `${photos.length} / 3`],
     ];
     let html = '<dl class="review-list">';
-    rows.forEach(([k, v, cls]) => {
-      html += `<dt>${escapeHtml(k)}</dt><dd class="${cls || ''}">${escapeHtml(String(v))}</dd>`;
+    // `raw` rows carry pre-escaped HTML (the approximate-location cell); all others
+    // are plain text and get escaped here.
+    rows.forEach(([k, v, cls, raw]) => {
+      html += `<dt>${escapeHtml(k)}</dt><dd class="${cls || ''}">${raw ? v : escapeHtml(String(v))}</dd>`;
     });
     html += '</dl>';
 

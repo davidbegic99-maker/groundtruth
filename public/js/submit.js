@@ -69,53 +69,73 @@
     const report = window.GT_buildReport ? window.GT_buildReport() : null;
     if (!report) return;
 
-    const submission_id = newId();
-    const item = {
-      submission_id,
-      device_token: deviceToken(),
-      channel: 'PWA',
-      timestamp: report.timestamp || new Date().toISOString(), // capture time
-      lat: report.lat, lon: report.lon,
-      location_method: report.location_method,
-      location_confidence: report.location_confidence,
-      landmark_text: report.landmark_text,
-      hazard_type: report.hazard_type,
-      infrastructure_type: report.infrastructure_type,
-      damage_classification: report.damage_classification,
-      ai_suggested_damage: report.ai_suggested_damage,
-      ai_confidence: report.ai_confidence,
-      ai_damage_percentage: report.ai_damage_percentage,
-      ai_source: report.ai_source,
-      people_in_danger: report.people_in_danger,
-      dynamic_q1_answer: report.dynamic_q1_answer,
-      dynamic_q2_answer: report.dynamic_q2_answer,
-      description_text: report.description_text,
-      language_detected: window.GT_I18N ? window.GT_I18N.current() : 'en',
-      // Store blobs in IndexedDB; convert to base64 only at upload time.
-      photos: (report.photos || []).filter(Boolean).map((p) => ({
-        blob: p.blob, mime: p.mime || 'image/jpeg', width: p.width, height: p.height, hash: p.hash,
-      })),
-      queued_at: new Date().toISOString(),
-    };
+    const btn = document.getElementById('btn-submit');
+    const errEl = document.getElementById('submit-error');
+    if (errEl) errEl.hidden = true;
+    if (btn) btn.disabled = true; // also guards against a double-tap
 
-    // OFFLINE-FIRST: persist before any network attempt.
-    await store.setItem(submission_id, item);
-    // Retain the full-resolution originals locally (§16). Best-effort — never blocks
-    // the submit/queue path; the compressed copies in `item` are what get uploaded.
-    await retainOriginals(report.photos, submission_id, item.timestamp);
-    updateQueueBadge();
+    try {
+      const submission_id = newId();
+      // Store photo bytes as an ArrayBuffer, NOT a Blob: some mobile browsers
+      // (notably iOS Safari) fail to persist Blobs in IndexedDB, which makes the
+      // offline-queue write throw. Previously that rejection was swallowed and the
+      // Submit button appeared to do nothing. ArrayBuffers persist reliably
+      // everywhere; we rebuild the Blob only at upload time.
+      const photos = await Promise.all((report.photos || []).filter(Boolean).map(async (p) => ({
+        data: await p.blob.arrayBuffer(),
+        mime: p.mime || 'image/jpeg', width: p.width, height: p.height, hash: p.hash,
+      })));
+      const item = {
+        submission_id,
+        device_token: deviceToken(),
+        channel: 'PWA',
+        timestamp: report.timestamp || new Date().toISOString(), // capture time
+        lat: report.lat, lon: report.lon,
+        location_method: report.location_method,
+        location_confidence: report.location_confidence,
+        landmark_text: report.landmark_text,
+        hazard_type: report.hazard_type,
+        infrastructure_type: report.infrastructure_type,
+        damage_classification: report.damage_classification,
+        ai_suggested_damage: report.ai_suggested_damage,
+        ai_confidence: report.ai_confidence,
+        ai_damage_percentage: report.ai_damage_percentage,
+        ai_source: report.ai_source,
+        people_in_danger: report.people_in_danger,
+        dynamic_q1_answer: report.dynamic_q1_answer,
+        dynamic_q2_answer: report.dynamic_q2_answer,
+        description_text: report.description_text,
+        language_detected: window.GT_I18N ? window.GT_I18N.current() : 'en',
+        photos,
+        queued_at: new Date().toISOString(),
+      };
 
-    let result = null;
-    if (navigator.onLine) {
-      result = await uploadItem(item).catch(() => null);
+      // OFFLINE-FIRST: persist before any network attempt.
+      await store.setItem(submission_id, item);
+      // Retain the full-resolution originals locally (§16). Best-effort — never blocks
+      // the submit/queue path; the compressed copies in `item` are what get uploaded.
+      await retainOriginals(report.photos, submission_id, item.timestamp);
+      updateQueueBadge();
+
+      let result = null;
+      if (navigator.onLine) {
+        result = await uploadItem(item).catch(() => null);
+      }
+      const online = !!result;
+      if (!online) await registerBackgroundSync();
+
+      const count = await queueCount();
+      window.GT_showScreen('screen-confirm');
+      renderConfirm(online ? 'online' : 'offline', report, result, count);
+      if (window.GT_refreshCount) window.GT_refreshCount();
+    } catch (err) {
+      // Never fail silently. The report has NOT been queued if we got here, so tell
+      // the reporter to try again instead of leaving the Submit button doing nothing.
+      console.error('[submit] failed', err);
+      if (errEl) { errEl.hidden = false; errEl.textContent = t('review.submitError'); }
+    } finally {
+      if (btn) btn.disabled = false;
     }
-    const online = !!result;
-    if (!online) await registerBackgroundSync();
-
-    const count = await queueCount();
-    window.GT_showScreen('screen-confirm');
-    renderConfirm(online ? 'online' : 'offline', report, result, count);
-    if (window.GT_refreshCount) window.GT_refreshCount();
   }
 
   async function uploadItem(item) {
@@ -141,7 +161,10 @@
       description_text: item.description_text,
       language_detected: item.language_detected,
       photos: await Promise.all((item.photos || []).map(async (p) => ({
-        data: await blobToBase64(p.blob), mime: p.mime, width: p.width, height: p.height,
+        // p.data is an ArrayBuffer (current format); p.blob is the legacy format for
+        // any item queued before this change. Rebuild a Blob for base64 encoding.
+        data: await blobToBase64(p.data ? new Blob([p.data], { type: p.mime || 'image/jpeg' }) : p.blob),
+        mime: p.mime, width: p.width, height: p.height,
       }))),
     };
     const r = await fetch('/api/submissions', {
@@ -266,11 +289,6 @@
     el.hidden = false;
     const ll = [report.lat, report.lon];
     if (!confirmMap) {
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: '/vendor/images/marker-icon-2x.png',
-        iconUrl: '/vendor/images/marker-icon.png',
-        shadowUrl: '/vendor/images/marker-shadow.png',
-      });
       confirmMap = L.map('confirm-map', {
         zoomControl: false, attributionControl: true, dragging: false,
         scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
@@ -282,8 +300,24 @@
       confirmMap.setView(ll, 16);
     }
     if (confirmMarker) confirmMap.removeLayer(confirmMarker);
-    confirmMarker = L.marker(ll).addTo(confirmMap);
+    confirmMarker = L.marker(ll, { icon: pinIcon() }).addTo(confirmMap);
     setTimeout(() => confirmMap && confirmMap.invalidateSize(), 80);
+  }
+
+  // Same standard teardrop map-pin used on the reporter location map — an inline
+  // SVG divIcon, so it never depends on Leaflet's default PNG marker (whose path
+  // was doubled onto our absolute icon URLs and 404'd to a broken-image symbol).
+  function pinIcon() {
+    return L.divIcon({
+      className: 'gt-pin',
+      html: '<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<path d="M14 1C7 1 1.5 6.5 1.5 13.5c0 8.7 11 24 12 25.2.3.4.7.4 1 0 1-1.2 12-16.5 12-25.2C26.5 6.5 21 1 14 1z" ' +
+        'fill="#d32f2f" stroke="#ffffff" stroke-width="2"/>' +
+        '<circle cx="14" cy="13.5" r="4.8" fill="#ffffff"/></svg>',
+      iconSize: [28, 40],
+      iconAnchor: [14, 39],
+      popupAnchor: [0, -34],
+    });
   }
 
   function startAnother() {
