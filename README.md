@@ -241,7 +241,7 @@ call for you: `GET /api/export/csv`, `/api/export/geojson`, `/api/export/gpkg`,
 The damage tier (Minimal / Partial / Complete), confidence score, analyst-only damage
 percentage, and suggested building type come from an AI assessment of the photo,
 grounded in a five-standard engineering cross-walk (ATC-20, EMS-98, Copernicus EMS,
-xBD, and the UNDP tiers).
+the xBD Joint Damage Scale, and FEMA P-154).
 
 **Prototype behaviour:**
 - If an `ANTHROPIC_API_KEY` environment variable is set, the prototype calls the

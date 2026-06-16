@@ -418,6 +418,7 @@
       ai_suggested_damage: state.ai_suggested_damage,
       ai_confidence: state.ai_confidence,
       ai_damage_percentage: state.ai_damage_percentage,
+      ai_source: state.ai_source,
       people_in_danger: state.people_in_danger,
       priority_flag: state.priority_flag,
       dynamic_q1_answer: state.dynamic_q1_answer,

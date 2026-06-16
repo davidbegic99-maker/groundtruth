@@ -53,7 +53,8 @@
       "photos": "照片",
       "versions": "版本历史",
       "version": "版本 {{n}}",
-      "translated": "英文翻译"
+      "translated": "英文翻译",
+      "mockNote": "演示占位符——未配置实时 AI 密钥。"
     },
     "export": {
       "title": "导出与分享",
@@ -69,7 +70,8 @@
       "autoPdf": "{{count}} 个区域已达到自动摘要阈值（{{r}} 米内有 {{n}} 份报告）。可从下方地图视图生成 PDF。",
       "copy": "复制",
       "copied": "已复制"
-    }
+    },
+    "infraSummary": "按建筑类型统计的报告"
   },
   "app": {
     "name": "GroundTruth",
@@ -130,7 +132,7 @@
     "replace": "替换",
     "remove": "移除",
     "optional": "可选",
-    "recommended": "建议",
+    "required": "必填",
     "gpsFound": "已从此照片中找到位置",
     "processing": "处理中…",
     "continue": "继续"
@@ -158,9 +160,9 @@
     "methodEXIF": "来自照片定位",
     "methodLiveGPS": "来自您的设备",
     "methodMapTap": "在地图上标记",
-    "methodLandmark": "来自地标描述",
+    "methodLandmark": "大致位置",
     "methodUnknown": "未设置 — 分析师可跟进",
-    "landmarkApprox": "大致位置 — 已固定到当前地图区域；分析师将根据您的地标进行校正。",
+    "landmarkApprox": "已保存地标，供分析师查找——图钉为大致的临时位置。",
     "none": "尚未设置位置",
     "noBlock": "要继续，请设置位置：使用当前位置、点按地图或描述附近的地标。",
     "continue": "继续"

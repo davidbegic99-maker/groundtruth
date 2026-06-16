@@ -12,7 +12,7 @@ import { db, getSettingNumber } from './db.js';
 const COLS = `submission_id, channel, timestamp, lat, lon, location_method, landmark_text,
   location_confidence,
   hazard_type, infrastructure_type, damage_classification, ai_suggested_damage,
-  ai_confidence, ai_damage_percentage, conflict_flag, people_in_danger, priority_flag,
+  ai_confidence, ai_damage_percentage, ai_source, conflict_flag, people_in_danger, priority_flag,
   photo_hash_1, photo_hash_2, photo_hash_3, debris_present, description_text,
   language_detected, sync_status, building_id, version_number, dynamic_q1_answer,
   dynamic_q2_answer, received_at, dedup_annotation, description_en`;

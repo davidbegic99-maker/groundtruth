@@ -94,7 +94,8 @@
       "photos": "Photos",
       "versions": "Version history",
       "version": "Version {{n}}",
-      "translated": "English translation"
+      "translated": "English translation",
+      "mockNote": "Demo placeholder — no live AI key configured."
     },
     "export": {
       "title": "Export & share",
@@ -110,7 +111,8 @@
       "autoPdf": "{{count}} area(s) reached the auto-summary threshold ({{n}} reports within {{r}} m). Generate a PDF from the map view below.",
       "copy": "Copy",
       "copied": "Copied"
-    }
+    },
+    "infraSummary": "Reports by building type"
   },
   "common": {
     "continue": "Continue",
@@ -130,7 +132,7 @@
     "replace": "Replace",
     "remove": "Remove",
     "optional": "optional",
-    "recommended": "recommended",
+    "required": "required",
     "gpsFound": "Location found in this photo",
     "processing": "Processing…",
     "continue": "Continue"
@@ -158,9 +160,9 @@
     "methodEXIF": "From photo GPS",
     "methodLiveGPS": "From your device",
     "methodMapTap": "Pinned on the map",
-    "methodLandmark": "From landmark description",
+    "methodLandmark": "Approximate location",
     "methodUnknown": "Not set — an analyst can follow up",
-    "landmarkApprox": "Approximate — pinned to the current map area; an analyst will refine it from your landmark.",
+    "landmarkApprox": "Landmark saved for an analyst to look up — the pin is an approximate placeholder.",
     "none": "No location set yet",
     "noBlock": "To continue, set your location: use your current location, tap the map, or describe a nearby landmark.",
     "continue": "Continue"

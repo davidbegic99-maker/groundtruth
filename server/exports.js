@@ -23,10 +23,11 @@ export function getRows(filters) {
 
 // ---------------------------------------------------------------------------
 // CSV (§14.2): flat table — mandatory fields plus submission_id, hazard_type,
-// channel, location_method, priority_flag.
+// channel, location_method, priority_flag. The mandated single "geocoordinates"
+// field (decimal degrees, "lat, lon") sits alongside the separate lat/lon cols.
 // ---------------------------------------------------------------------------
 const CSV_COLUMNS = [
-  'submission_id', 'lat', 'lon', 'timestamp',
+  'submission_id', 'lat', 'lon', 'geocoordinates', 'timestamp',
   'damage_classification', 'infrastructure_type',
   'hazard_type', 'channel', 'location_method', 'location_confidence', 'landmark_text', 'priority_flag',
   'building_id', 'version_number',
@@ -34,10 +35,18 @@ const CSV_COLUMNS = [
 
 export function toCSV(rows) {
   const head = CSV_COLUMNS.join(',');
-  const lines = rows.map((r) =>
-    CSV_COLUMNS.map((c) => csvCell(c === 'priority_flag' ? (r.priority_flag ? 1 : 0) : r[c])).join(',')
-  );
+  const lines = rows.map((r) => CSV_COLUMNS.map((c) => csvCell(csvValue(r, c))).join(','));
   return head + '\n' + lines.join('\n') + (lines.length ? '\n' : '');
+}
+
+// Derive a single CSV cell value for a column. Most columns map straight to the
+// row; a few are computed (combined geocoordinates, boolean priority flag).
+function csvValue(r, c) {
+  if (c === 'priority_flag') return r.priority_flag ? 1 : 0;
+  // Combined decimal-degrees coordinate, e.g. "41.00820, 28.97840"; blank when
+  // the record has no coordinate. The existing lat/lon columns are kept as-is.
+  if (c === 'geocoordinates') return r.lat != null && r.lon != null ? `${r.lat}, ${r.lon}` : '';
+  return r[c];
 }
 
 function csvCell(v) {

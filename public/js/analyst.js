@@ -57,10 +57,24 @@
     baseTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19, attribution: '© OpenStreetMap contributors',
     }).addTo(map);
+    loadFootprints(); // static demo building polygons, drawn under the markers
     publicLayer = L.layerGroup().addTo(map);
     coverageLayer = L.layerGroup();
     analystLayer = L.layerGroup();
     map.on('moveend', updateViewCounter);
+  }
+
+  // Load the STATIC demo building footprints (sourced once at dev time; cached by
+  // the service worker for offline use). One demo area only — never fetched live.
+  // Drawn in the default overlay pane, which sits below the marker pane.
+  async function loadFootprints() {
+    try {
+      const fc = await (await fetch('/data/buildings-demo.geojson')).json();
+      L.geoJSON(fc, {
+        interactive: false,
+        style: { color: '#1565c0', weight: 1, fillColor: '#1565c0', fillOpacity: 0.1 },
+      }).addTo(map);
+    } catch (_) { /* offline before first cache, or file missing — skip overlay */ }
   }
 
   // =========================================================================
@@ -157,9 +171,36 @@
     recordsData = data.submissions || [];
     renderMarkers();
     renderRecordsList();
+    renderInfraSummary();
     updateViewCounter();
     updateApiUrl();
     loadAutoPdf();
+  }
+
+  // Compact "reports by building type" panel for the records currently matching
+  // the active filters (recordsData is already filtered server-side). Mirrors the
+  // PDF area-summary's infrastructure breakdown; refreshes whenever filters change.
+  function renderInfraSummary() {
+    const el = document.getElementById('infra-summary');
+    if (!el) return;
+    if (!recordsData.length) { el.hidden = true; el.innerHTML = ''; return; }
+    const counts = {};
+    recordsData.forEach((r) => {
+      const k = r.infrastructure_type || '—';
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    // Canonical order (all 7 types), only listing those present, most-common first.
+    const rows = D().INFRASTRUCTURE
+      .map((i) => ({ value: i.value, label: D().infraLabel(i.value), n: counts[i.value] || 0 }))
+      .filter((x) => x.n > 0)
+      .sort((a, b) => b.n - a.n);
+    let html = `<h2 class="infra-summary-title">${esc(t('a.infraSummary'))}</h2><ul class="infra-summary-list">`;
+    rows.forEach((x) => {
+      html += `<li><span class="infra-name">${esc(x.label)}</span><span class="infra-count">${x.n}</span></li>`;
+    });
+    html += '</ul>';
+    el.innerHTML = html;
+    el.hidden = false;
   }
 
   function renderMarkers() {
@@ -263,6 +304,9 @@
     html += '<dl class="detail-list">';
     rows.forEach(([k, v]) => { html += `<dt>${esc(k)}</dt><dd>${v}</dd>`; });
     html += '</dl>';
+    // FIX 4: when the no-key mock classifier produced this AI suggestion, make it
+    // unmistakable that it is a demo placeholder rather than a live AI result.
+    if (rec.ai_source === 'mock') html += `<div class="detail-mock">${esc(t('a.detail.mockNote'))}</div>`;
     if (rec.description_text) html += `<div class="detail-desc"><strong>${esc(t('a.detail.description'))}:</strong> ${esc(rec.description_text)}</div>`;
     if (rec.description_en && rec.description_en !== rec.description_text) html += `<div class="detail-desc detail-translated"><strong>${esc(t('a.detail.translated'))}:</strong> ${esc(rec.description_en)}</div>`;
     if (rec.dedup_annotation) html += `<div class="detail-annot">${esc(rec.dedup_annotation)}</div>`;
@@ -505,6 +549,7 @@
     if (tab === 'public') loadPublic();
     else if (analystKey) {
       renderRecordsList();
+      renderInfraSummary();
       loadAutoPdf();
       const rec = recordsData.find((r) => r.submission_id === selectedId);
       if (rec) showDetail(rec);

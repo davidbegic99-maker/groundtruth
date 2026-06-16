@@ -53,7 +53,8 @@
       "photos": "Fotos",
       "versions": "Historial de versiones",
       "version": "Versión {{n}}",
-      "translated": "Traducción al inglés"
+      "translated": "Traducción al inglés",
+      "mockNote": "Marcador de demostración: no hay clave de IA en vivo configurada."
     },
     "export": {
       "title": "Exportar y compartir",
@@ -69,7 +70,8 @@
       "autoPdf": "{{count}} zona(s) alcanzaron el umbral de resumen automático ({{n}} informes en {{r}} m). Genere un PDF desde la vista del mapa de abajo.",
       "copy": "Copiar",
       "copied": "Copiado"
-    }
+    },
+    "infraSummary": "Informes por tipo de edificio"
   },
   "app": {
     "name": "GroundTruth",
@@ -130,7 +132,7 @@
     "replace": "Reemplazar",
     "remove": "Quitar",
     "optional": "opcional",
-    "recommended": "recomendado",
+    "required": "obligatorio",
     "gpsFound": "Ubicación encontrada en esta foto",
     "processing": "Procesando…",
     "continue": "Continuar"
@@ -158,9 +160,9 @@
     "methodEXIF": "GPS de la foto",
     "methodLiveGPS": "Desde tu dispositivo",
     "methodMapTap": "Marcado en el mapa",
-    "methodLandmark": "Según el punto de referencia",
+    "methodLandmark": "Ubicación aproximada",
     "methodUnknown": "Sin definir — un analista puede dar seguimiento",
-    "landmarkApprox": "Aproximada — fijada en la zona actual del mapa; un analista la precisará con tu punto de referencia.",
+    "landmarkApprox": "Punto de referencia guardado para que un analista lo localice; el marcador es una ubicación aproximada provisional.",
     "none": "Aún no hay ubicación",
     "noBlock": "Para continuar, indica tu ubicación: usa tu ubicación actual, toca el mapa o describe un punto de referencia cercano.",
     "continue": "Continuar"

@@ -30,6 +30,7 @@
   let map = null;
   let marker = null;
   let accuracyCircle = null;
+  let footprintFeatures = []; // static demo building polygons (one area only)
 
   const t = (k, o) => window.i18next.t(k, o);
 
@@ -116,7 +117,16 @@
   // Photos
   // =========================================================================
   function slotLabel(i) { return t(`photos.slot${i + 1}`); }
-  function slotTag(i) { return i === 0 ? t('photos.recommended') : t('photos.optional'); }
+  function slotTag(i) { return i === 0 ? t('photos.required') : t('photos.optional'); }
+
+  // At least one photo (slot 1) is REQUIRED before the Photos step can continue.
+  function hasAtLeastOnePhoto() {
+    return state.photos.some((p) => p && p.blob);
+  }
+  function updatePhotosContinue() {
+    const btn = document.getElementById('btn-photos-continue');
+    if (btn) btn.disabled = !hasAtLeastOnePhoto();
+  }
 
   function renderPhotoGrid() {
     const grid = document.getElementById('photo-grid');
@@ -173,6 +183,7 @@
       }
       grid.appendChild(slot);
     }
+    updatePhotosContinue();
   }
 
   function requestPhoto(i) {
@@ -385,9 +396,89 @@
       maxZoom: 19,
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+    loadFootprints(); // demo building polygons, drawn under the marker
     map.on('click', (e) => {
-      setCoords(e.latlng.lat, e.latlng.lng, 'MapTap', null);
+      // If the tap lands inside a demo building footprint, snap the pin to that
+      // building's centroid (still a normal-confidence map tap). Otherwise use the
+      // raw tapped point exactly as before.
+      const snapped = snapToBuilding(e.latlng.lat, e.latlng.lng);
+      const ll = snapped || { lat: e.latlng.lat, lon: e.latlng.lng };
+      setCoords(ll.lat, ll.lon, 'MapTap', null);
     });
+  }
+
+  // Load the STATIC footprint GeoJSON (sourced once at dev time; cached by the
+  // service worker for offline use). One demo area only — never fetched live from
+  // any external footprint service. Failure is non-fatal: the map still works.
+  async function loadFootprints() {
+    if (footprintFeatures.length || typeof L === 'undefined') return;
+    try {
+      const fc = await (await fetch('/data/buildings-demo.geojson')).json();
+      footprintFeatures = (fc && fc.features) || [];
+      // Default overlayPane sits below markerPane, so footprints draw under the
+      // pin automatically; interactive:false lets taps pass through to the map.
+      L.geoJSON(fc, {
+        interactive: false,
+        style: { color: '#1565c0', weight: 1, fillColor: '#1565c0', fillOpacity: 0.12 },
+      }).addTo(map);
+    } catch (_) { /* offline before first cache, or file missing — skip overlay */ }
+  }
+
+  // Return the centroid of the building footprint containing (lat, lon), or null.
+  function snapToBuilding(lat, lon) {
+    for (const f of footprintFeatures) {
+      const ring = outerRing(f);
+      if (ring && pointInRing(lat, lon, ring)) return polygonCentroid(ring);
+    }
+    return null;
+  }
+
+  function outerRing(feature) {
+    const g = feature && feature.geometry;
+    if (!g) return null;
+    if (g.type === 'Polygon') return g.coordinates[0];
+    if (g.type === 'MultiPolygon') return g.coordinates[0] && g.coordinates[0][0];
+    return null;
+  }
+
+  // Ray-casting point-in-polygon. Ring is an array of [lon, lat] pairs.
+  function pointInRing(lat, lon, ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0], yi = ring[i][1];
+      const xj = ring[j][0], yj = ring[j][1];
+      const intersect = (yi > lat) !== (yj > lat) &&
+        lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  // Area-weighted centroid of a polygon ring ([lon, lat] pairs). Computed in a
+  // local frame (offset by the first vertex) so the shoelace sums don't lose
+  // precision to catastrophic cancellation — the raw lon/lat (~29, ~41) are huge
+  // next to a building's ~0.0001° span, which would otherwise push the centroid
+  // outside its own footprint.
+  function polygonCentroid(ring) {
+    const ox = ring[0][0], oy = ring[0][1];
+    let area = 0, cx = 0, cy = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0] - ox, yi = ring[i][1] - oy;
+      const xj = ring[j][0] - ox, yj = ring[j][1] - oy;
+      const cross = xj * yi - xi * yj;
+      area += cross;
+      cx += (xi + xj) * cross;
+      cy += (yi + yj) * cross;
+    }
+    if (Math.abs(area) < 1e-14) {
+      // Degenerate ring — fall back to the average of the vertices.
+      const n = ring.length;
+      const sx = ring.reduce((s, p) => s + p[0], 0) / n;
+      const sy = ring.reduce((s, p) => s + p[1], 0) / n;
+      return { lat: sy, lon: sx };
+    }
+    area *= 0.5;
+    return { lat: oy + cy / (6 * area), lon: ox + cx / (6 * area) };
   }
 
   function syncMap() {

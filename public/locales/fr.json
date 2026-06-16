@@ -53,7 +53,8 @@
       "photos": "Photos",
       "versions": "Historique des versions",
       "version": "Version {{n}}",
-      "translated": "Traduction anglaise"
+      "translated": "Traduction anglaise",
+      "mockNote": "Espace réservé de démonstration — aucune clé IA en direct configurée."
     },
     "export": {
       "title": "Exporter et partager",
@@ -69,7 +70,8 @@
       "autoPdf": "{{count}} zone(s) ont atteint le seuil de résumé automatique ({{n}} signalements dans un rayon de {{r}} m). Générez un PDF depuis la vue carte ci-dessous.",
       "copy": "Copier",
       "copied": "Copié"
-    }
+    },
+    "infraSummary": "Signalements par type de bâtiment"
   },
   "app": {
     "name": "GroundTruth",
@@ -130,7 +132,7 @@
     "replace": "Remplacer",
     "remove": "Retirer",
     "optional": "facultatif",
-    "recommended": "recommandé",
+    "required": "obligatoire",
     "gpsFound": "Localisation trouvée dans cette photo",
     "processing": "Traitement…",
     "continue": "Continuer"
@@ -158,9 +160,9 @@
     "methodEXIF": "GPS de la photo",
     "methodLiveGPS": "Depuis votre appareil",
     "methodMapTap": "Placé sur la carte",
-    "methodLandmark": "D'après le point de repère",
+    "methodLandmark": "Emplacement approximatif",
     "methodUnknown": "Non défini — un analyste pourra vérifier",
-    "landmarkApprox": "Approximative — fixée sur la zone actuelle de la carte ; un analyste la précisera à partir de votre point de repère.",
+    "landmarkApprox": "Point de repère enregistré pour qu'un analyste le localise — l'épingle est un emplacement approximatif provisoire.",
     "none": "Aucun emplacement défini",
     "noBlock": "Pour continuer, indiquez votre position : utilisez votre position actuelle, touchez la carte ou décrivez un point de repère proche.",
     "continue": "Continuer"

@@ -27,7 +27,7 @@ INSERT OR IGNORE INTO submissions (
   submission_id, channel, timestamp, lat, lon, location_method, landmark_text,
   location_confidence,
   hazard_type, infrastructure_type, damage_classification,
-  ai_suggested_damage, ai_confidence, ai_damage_percentage, conflict_flag,
+  ai_suggested_damage, ai_confidence, ai_damage_percentage, ai_source, conflict_flag,
   people_in_danger, priority_flag,
   photo_hash_1, photo_hash_2, photo_hash_3,
   debris_present, description_text, language_detected, sync_status,
@@ -37,7 +37,7 @@ INSERT OR IGNORE INTO submissions (
   @submission_id, @channel, @timestamp, @lat, @lon, @location_method, @landmark_text,
   @location_confidence,
   @hazard_type, @infrastructure_type, @damage_classification,
-  @ai_suggested_damage, @ai_confidence, @ai_damage_percentage, @conflict_flag,
+  @ai_suggested_damage, @ai_confidence, @ai_damage_percentage, @ai_source, @conflict_flag,
   @people_in_danger, @priority_flag,
   @photo_hash_1, @photo_hash_2, @photo_hash_3,
   @debris_present, @description_text, @language_detected, @sync_status,
@@ -78,6 +78,13 @@ export function insertSubmission(payload) {
   const aiConf = num(payload.ai_confidence);
   const conflict_flag = computeConflict(userDamage, aiDamage, aiConf) ? 1 : 0;
 
+  // Record whether the AI suggestion came from the real model or the no-key mock
+  // (§8): the classifier returns 'claude' for live and 'mock' for the placeholder.
+  // Normalise to 'live' / 'mock' so the analyst can tell a demo placeholder apart.
+  const ai_source = payload.ai_source === 'mock'
+    ? 'mock'
+    : (payload.ai_source === 'claude' || payload.ai_source === 'live' ? 'live' : null);
+
   const device_hash = payload.device_token
     ? crypto.createHash('sha256').update(String(payload.device_token)).digest('hex')
     : null;
@@ -108,6 +115,7 @@ export function insertSubmission(payload) {
     ai_suggested_damage: aiDamage,
     ai_confidence: aiConf,
     ai_damage_percentage: num(payload.ai_damage_percentage),
+    ai_source,
     conflict_flag,
     people_in_danger: people,
     priority_flag,

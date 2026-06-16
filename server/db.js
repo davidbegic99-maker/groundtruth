@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS submissions (
   ai_suggested_damage    TEXT,                    -- what AI suggested before confirmation
   ai_confidence          REAL,                    -- 0..1
   ai_damage_percentage   REAL,                    -- 0..100  ANALYST FIELD ONLY, never shown to users
+  ai_source              TEXT,                    -- 'live' (real AI key) / 'mock' (no-key demo placeholder)
   conflict_flag          INTEGER NOT NULL DEFAULT 0, -- boolean
   people_in_danger       TEXT,                    -- Yes / No / IDontKnow  (MANDATORY)
   priority_flag          INTEGER NOT NULL DEFAULT 0, -- boolean; true when people_in_danger = Yes
@@ -103,6 +104,9 @@ CREATE TABLE IF NOT EXISTS settings (
 const submissionColumns = db.prepare('PRAGMA table_info(submissions)').all().map((c) => c.name);
 if (!submissionColumns.includes('location_confidence')) {
   db.exec('ALTER TABLE submissions ADD COLUMN location_confidence TEXT');
+}
+if (!submissionColumns.includes('ai_source')) {
+  db.exec('ALTER TABLE submissions ADD COLUMN ai_source TEXT');
 }
 
 // ---------------------------------------------------------------------------

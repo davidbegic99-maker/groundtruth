@@ -546,6 +546,22 @@ h2 { font-size: 1.2rem; margin: 0 0 8px; }
   border-inline-start: 3px solid var(--border); padding-inline-start: 10px;
 }
 
+/* ---------- Infrastructure summary panel ---------- */
+.infra-summary { padding-top: 16px; padding-bottom: 16px; }
+.infra-summary-title { font-size: 1.05rem; margin: 0 0 10px; }
+.infra-summary-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.infra-summary-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px; font-size: 0.88rem;
+}
+.infra-summary-list .infra-name { color: var(--text); }
+.infra-summary-list .infra-count {
+  font-weight: 700; color: var(--blue-dark); font-variant-numeric: tabular-nums;
+  background: #fff; border: 1px solid var(--border); border-radius: 999px;
+  min-width: 26px; text-align: center; padding: 1px 8px;
+}
+
 /* ---------- Records list ---------- */
 .records-head { display: flex; align-items: center; justify-content: space-between; }
 .records-list { display: grid; gap: 8px; margin-top: 8px; }
@@ -590,6 +606,11 @@ h2 { font-size: 1.2rem; margin: 0 0 8px; }
 .detail-annot {
   margin-top: 12px; background: #fff7e6; border: 1px solid var(--conflict);
   border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; color: #6b4e00;
+}
+/* Demo-placeholder note when the AI suggestion came from the no-key mock. */
+.detail-mock {
+  margin-top: 12px; background: #fff7ed; border: 1px dashed #b45309;
+  border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; font-weight: 600; color: #92400e;
 }
 .detail-sub { font-weight: 700; font-size: 0.85rem; margin: 14px 0 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
 .detail-photos { display: flex; gap: 8px; flex-wrap: wrap; }
