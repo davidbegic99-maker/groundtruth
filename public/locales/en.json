@@ -94,6 +94,8 @@
       "photos": "Photos",
       "versions": "Version history",
       "version": "Version {{n}}",
+      "versionHint": "Select a version to open its full detail.",
+      "noPhotoVersion": "No photo",
       "translated": "English translation",
       "mockNote": "Demo placeholder — no live AI key configured."
     },

@@ -33,7 +33,7 @@ services:
         value: undp-demo
       - key: GT_PHOTO_KEY
         generateValue: true
-      # Load the 16-report demo dataset on first boot (only when the DB is empty),
+      # Load the 18-report demo dataset on first boot (only when the DB is empty),
       # so evaluators see a populated map immediately. Set to 0 to start empty.
       - key: SEED_ON_BOOT
         value: "1"

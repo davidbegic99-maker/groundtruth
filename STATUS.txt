@@ -22,9 +22,9 @@ STEP 7 PROGRESS (this session)
                repo initialized and committed. Secrets/internal docs excluded from the
                repo (node_modules, server/data + photo key, the internal briefing, local
                Claude settings).
-               + SEED_ON_BOOT: a fresh deployment (empty DB) auto-loads the 16-report
+               + SEED_ON_BOOT: a fresh deployment (empty DB) auto-loads the 18-report
                  demo dataset on startup so evaluators see a populated map immediately —
-                 only when empty, never overwriting real data. Verified: seeds 16 with
+                 only when empty, never overwriting real data. Verified: seeds 18 with
                  dedup annotation on boot, skips on the next boot. render.yaml sets it.
                  Demo dataset is now single-source in server/seed.js (used by both the
                  boot seeder and scripts/seed-demo.mjs).
@@ -95,19 +95,20 @@ STEP 4 — Submit & offline queue
 STEP 5 — Analyst dashboard: FULLY DONE AND VERIFIED IN THE BROWSER
   Back-end (verified live earlier):
   - Public data returns ONLY aggregated map "cells" (counts per damage level per
-    area): 15 located reports collapsed into 6 cells, no individual records.
+    area): 17 located reports collapsed into 10 cells, no individual records.
   - Analyst data is locked behind the access key: refused (401) without it,
-    returns all 16 full records with it. Photos, version history and filtering
+    returns all 18 full records with it. Photos, version history and filtering
     all answer correctly.
-  - A realistic 16-report Istanbul demo dataset is loaded (two clusters plus
-    scattered points): 5 priority, 2 AI-conflict, one building with 3 versions,
-    one report with no location.
+  - A purpose-built 18-report Istanbul demo dataset is loaded (an earthquake cluster
+    under the Sultanahmet footprints plus scattered points across other hazards):
+    4 priority, 3 AI-conflict, one building with 3 versions, one report with no
+    location.
 
   Front-end (finished and checked in a real browser on 2026-06-11):
   - Public overview: Istanbul map with colour-coded aggregate cells, legend,
     "reports in view" counter, and the privacy hint. Confirmed on screen.
-  - Analyst tab: login gate works (key "undp-demo"); 16 records list, priority-
-    sorted, with red Priority and yellow Conflict badges; 15 map markers; filters
+  - Analyst tab: login gate works (key "undp-demo"); 18 records list, priority-
+    sorted, with red Priority and yellow Conflict badges; 17 map markers; filters
     populated; detail panel shows the analyst-only AI damage estimate, the
     optional crisis questions, the 3-version history, and the decrypted photo.
   - Heatmap and coverage-gap toggles both draw correctly.

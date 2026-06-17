@@ -22,6 +22,7 @@
   let tab = 'public';
   let analystKey = localStorage.getItem(KEY_STORE) || null;
   let selectedId = null;
+  let selectedRecord = null; // full record currently shown in the detail panel (may be a version not in the filtered list)
   let refreshTimer = null;
   let liveSeconds = 60;
   const photoUrlCache = new Map();
@@ -263,6 +264,7 @@
   }
 
   async function showDetail(rec) {
+    selectedRecord = rec;
     const el = document.getElementById('detail');
     el.hidden = false;
     const coords = rec.lat != null ? `${rec.lat.toFixed(5)}, ${rec.lon.toFixed(5)}` : '—';
@@ -313,7 +315,7 @@
     html += `<div class="detail-photos" id="detail-photos"></div>`;
     html += `<div class="detail-versions" id="detail-versions"></div>`;
     el.innerHTML = html;
-    document.getElementById('detail-close').addEventListener('click', () => { el.hidden = true; selectedId = null; renderRecordsList(); });
+    document.getElementById('detail-close').addEventListener('click', () => { el.hidden = true; selectedId = null; selectedRecord = null; renderRecordsList(); });
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     loadPhotos(rec);
@@ -354,15 +356,50 @@
     } catch (_) { return; }
     const versions = data.versions || [];
     if (versions.length <= 1) return;
-    let html = `<div class="detail-sub">${esc(t('a.detail.versions'))} (${versions.length})</div><ul class="ver-list">`;
+
+    // Each row is a button that opens that version's own full detail. Every
+    // version is a complete submission, so it carries its own photo + AI fields;
+    // a row with no photo is marked so the analyst sees it was not retained for
+    // that version rather than missing from the panel.
+    wrap.innerHTML =
+      `<div class="detail-sub">${esc(t('a.detail.versions'))} (${versions.length})</div>` +
+      `<p class="ver-hint">${esc(t('a.detail.versionHint'))}</p>`;
+    const list = document.createElement('div');
+    list.className = 'ver-list';
     versions.forEach((v) => {
       const cur = v.submission_id === rec.submission_id;
-      html += `<li class="${cur ? 'cur' : ''}"><span class="ver-n">${esc(t('a.detail.version', { n: v.version_number }))}</span>` +
+      const hasPhoto = !!(v.photo_hash_1 || v.photo_hash_2 || v.photo_hash_3);
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'ver-row' + (cur ? ' cur' : '');
+      row.setAttribute('aria-current', cur ? 'true' : 'false');
+      let badges = '';
+      if (v.priority_flag) badges += '<span class="badge prio">⚑</span>';
+      if (v.conflict_flag) badges += '<span class="badge conf">⚠</span>';
+      row.innerHTML =
+        `<span class="ver-n">${esc(t('a.detail.version', { n: v.version_number }))}</span>` +
         `<span class="ver-dmg tone-${tierCls(v.damage_classification)}">${esc(D().damageLabel(v.damage_classification))}</span>` +
-        `<span class="ver-time">${esc(fmtTime(v.timestamp))}</span></li>`;
+        badges +
+        `<span class="ver-photo ${hasPhoto ? 'has' : 'none'}">${hasPhoto ? '📷' : esc(t('a.detail.noPhotoVersion'))}</span>` +
+        `<span class="ver-time">${esc(fmtTime(v.timestamp))}</span>`;
+      row.addEventListener('click', () => openVersion(v));
+      list.appendChild(row);
     });
-    html += '</ul>';
-    wrap.innerHTML = html;
+    wrap.appendChild(list);
+  }
+
+  // Open one version's full detail. The version object from /building/:id carries
+  // the same complete columns as a records-list row, so it renders identically —
+  // including its own photos, AI estimate and confirmed tier for that point in time.
+  function openVersion(v) {
+    selectedId = v.submission_id;
+    renderRecordsList();
+    if (v.lat != null && map) {
+      map.setView([v.lat, v.lon], Math.max(map.getZoom(), 15));
+      const m = markerById.get(v.submission_id);
+      if (m && m.openPopup) m.openPopup();
+    }
+    showDetail(v);
   }
 
   // =========================================================================
@@ -551,7 +588,10 @@
       renderRecordsList();
       renderInfraSummary();
       loadAutoPdf();
-      const rec = recordsData.find((r) => r.submission_id === selectedId);
+      // Re-render the open detail. Prefer the filtered-list record; fall back to
+      // the currently-shown record (e.g. a version opened from version history
+      // that isn't in the current filter set).
+      const rec = recordsData.find((r) => r.submission_id === selectedId) || selectedRecord;
       if (rec) showDetail(rec);
     }
     updateViewCounter();

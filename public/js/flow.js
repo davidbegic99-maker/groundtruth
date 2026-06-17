@@ -413,13 +413,31 @@
   // Submit (real submission is wired in Step 4 via window.GT_submitReport)
   // =========================================================================
   function onSubmit() {
-    if (typeof window.GT_submitReport === 'function') {
-      window.GT_submitReport();
-    } else {
-      // Step 3 standalone: confirm the report object is fully assembled.
-      console.log('Assembled report (Step 3):', snapshotReport());
-      alert(t('review.step4Pending'));
+    const errEl = document.getElementById('submit-error');
+    if (errEl) errEl.hidden = true;
+    // The Submit click must ALWAYS produce a visible result — never a silent
+    // no-op. We surface three failure modes that a silent handler would hide:
+    //   1. the Step-4 submit module never loaded (e.g. a stale/partial bundle),
+    //   2. a synchronous throw before the queue write, and
+    //   3. an async rejection from the (un-awaited) submit promise.
+    // Each shows the translated submit error and re-enables the button.
+    try {
+      if (typeof window.GT_submitReport !== 'function') {
+        throw new Error('submit module (GT_submitReport) not available');
+      }
+      const result = window.GT_submitReport();
+      if (result && typeof result.catch === 'function') result.catch(reportSubmitFailure);
+    } catch (err) {
+      reportSubmitFailure(err);
     }
+  }
+
+  function reportSubmitFailure(err) {
+    console.error('[submit] could not start', err);
+    const errEl = document.getElementById('submit-error');
+    if (errEl) { errEl.hidden = false; errEl.textContent = t('review.submitError'); }
+    const btn = document.getElementById('btn-submit');
+    if (btn) btn.disabled = false;
   }
 
   // Expose the assembled report for Step 4.

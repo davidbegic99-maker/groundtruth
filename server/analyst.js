@@ -47,13 +47,12 @@ export function queryAnalyst(f = {}) {
 }
 
 // All versions for one building footprint, oldest first (§4.2 version history).
+// Returns each version's FULL record (same columns as the analyst list) so the
+// dashboard can open any individual version's complete detail — every version is
+// a standalone submission row that retained its own photos and AI fields.
 export function buildingVersions(buildingId) {
   return db
-    .prepare(
-      `SELECT submission_id, version_number, timestamp, damage_classification,
-              ai_suggested_damage, ai_confidence, conflict_flag, priority_flag, dedup_annotation
-       FROM submissions WHERE building_id = ? ORDER BY version_number ASC`
-    )
+    .prepare(`SELECT ${COLS} FROM submissions WHERE building_id = ? ORDER BY version_number ASC`)
     .all(buildingId)
     .map((r) => ({ ...r, conflict_flag: !!r.conflict_flag, priority_flag: !!r.priority_flag }));
 }

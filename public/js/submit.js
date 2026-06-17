@@ -66,12 +66,19 @@
   // Submit
   // =========================================================================
   async function submitReport() {
-    const report = window.GT_buildReport ? window.GT_buildReport() : null;
-    if (!report) return;
-
     const btn = document.getElementById('btn-submit');
     const errEl = document.getElementById('submit-error');
     if (errEl) errEl.hidden = true;
+
+    const report = window.GT_buildReport ? window.GT_buildReport() : null;
+    if (!report) {
+      // GT_buildReport always returns an object, so this should never happen —
+      // but if it ever did, show the error instead of returning silently.
+      console.error('[submit] no report object to submit');
+      if (errEl) { errEl.hidden = false; errEl.textContent = t('review.submitError'); }
+      return;
+    }
+
     if (btn) btn.disabled = true; // also guards against a double-tap
 
     try {

@@ -168,17 +168,21 @@ function assignBuilding(lat, lon) {
 }
 
 // ---------------------------------------------------------------------------
-// AI conflict detection (§8.4): the three significant divergences, gated on the
-// configurable confidence thresholds.
-// ---------------------------------------------------------------------------
+// AI conflict detection (§8.4): flag whenever the user's CONFIRMED tier differs
+// from the AI-SUGGESTED tier by one or more tiers AND the AI was reasonably
+// confident. This catches every plausible disagreement — Minimal/Partial,
+// Partial/Complete and Minimal/Complete (in either direction) — not just the
+// largest gaps. The single confidence threshold lives in the settings table
+// (conflict_min_confidence, ~0.70), never hardcoded. The three-tier scale and
+// the priority (life-safety) flag are independent of this and unchanged.
+const TIER_RANK = { Minimal: 0, Partial: 1, Complete: 2 };
 function computeConflict(user, ai, conf) {
   if (!user || !ai || conf == null) return false;
-  const hi = getSettingNumber('conflict_min_confidence') ?? 0.75;
-  const partial = getSettingNumber('conflict_partial_confidence') ?? 0.85;
-  if (user === 'Minimal' && ai === 'Complete' && conf >= hi) return true;
-  if (user === 'Complete' && ai === 'Minimal' && conf >= hi) return true;
-  if (user === 'Minimal' && ai === 'Partial' && conf >= partial) return true;
-  return false;
+  const ru = TIER_RANK[user];
+  const ra = TIER_RANK[ai];
+  if (ru == null || ra == null) return false;
+  const minConf = getSettingNumber('conflict_min_confidence') ?? 0.70;
+  return ru !== ra && conf >= minConf;
 }
 
 function rowResult(row, duplicate) {

@@ -53,6 +53,8 @@
       "photos": "照片",
       "versions": "版本历史",
       "version": "版本 {{n}}",
+      "versionHint": "选择某个版本以查看其完整详情。",
+      "noPhotoVersion": "无照片",
       "translated": "英文翻译",
       "mockNote": "演示占位符——未配置实时 AI 密钥。"
     },

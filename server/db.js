@@ -119,8 +119,7 @@ const DEFAULT_SETTINGS = [
   ['version_match_footprint_m', '15', 'Match radius (m) for footprint-matched submissions when versioning'],
   ['version_match_gps_m', '30', 'Match radius (m) for GPS-only submissions when versioning'],
   ['dedup_temporal_hours', '2', 'Temporal clustering window (hours) for post-sync deduplication'],
-  ['conflict_min_confidence', '0.75', 'Min AI confidence for a Minimal<->Complete divergence to flag a conflict'],
-  ['conflict_partial_confidence', '0.85', 'Min AI confidence for a Minimal<->Partial divergence to flag a conflict'],
+  ['conflict_min_confidence', '0.70', 'Min AI confidence for a confirmed-vs-AI tier disagreement (any tier gap) to flag a conflict'],
   ['live_refresh_seconds', '60', 'Dashboard live refresh interval when online'],
   ['photo_target_kb', '200', 'Target compressed size per photo (KB) for upload'],
   ['public_grid_cell_deg', '0.003', 'Public aggregate map grid cell size in degrees (~330m); individual reports never exposed publicly'],
@@ -131,6 +130,14 @@ const insertSetting = db.prepare(
   'INSERT OR IGNORE INTO settings (key, value, description) VALUES (?, ?, ?)'
 );
 for (const [k, v, d] of DEFAULT_SETTINGS) insertSetting.run(k, v, d);
+
+// Settings migrations for the widened conflict detection (Fix 3): conflict is now
+// a single threshold over ANY tier disagreement. Move the old default forward (only
+// if untouched, so an admin override is preserved) and refresh its description; the
+// per-gap conflict_partial_confidence setting is superseded and removed.
+db.prepare("UPDATE settings SET value = '0.70', description = ? WHERE key = 'conflict_min_confidence' AND value = '0.75'")
+  .run('Min AI confidence for a confirmed-vs-AI tier disagreement (any tier gap) to flag a conflict');
+db.prepare("DELETE FROM settings WHERE key = 'conflict_partial_confidence'").run();
 
 // ---------------------------------------------------------------------------
 // Settings helpers

@@ -53,6 +53,8 @@
       "photos": "Photos",
       "versions": "Historique des versions",
       "version": "Version {{n}}",
+      "versionHint": "Sélectionnez une version pour afficher son détail complet.",
+      "noPhotoVersion": "Aucune photo",
       "translated": "Traduction anglaise",
       "mockNote": "Espace réservé de démonstration — aucune clé IA en direct configurée."
     },
