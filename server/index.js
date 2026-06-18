@@ -191,9 +191,9 @@ app.get('/api/export/gpkg', requireAnalyst, (req, res) => {
 });
 
 // --- PDF area summary (§13.3): on-demand for the current map view ---------
-app.get('/api/export/pdf', requireAnalyst, (req, res) => {
+app.get('/api/export/pdf', requireAnalyst, async (req, res) => {
   try {
-    const pdf = areaSummaryPDF(parseFilters(req.query), { title: req.query.title || undefined });
+    const pdf = await areaSummaryPDF(parseFilters(req.query), { title: req.query.title || undefined });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="groundtruth-area-${stamp()}.pdf"`);
     res.send(pdf);

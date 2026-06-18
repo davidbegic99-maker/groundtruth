@@ -13,6 +13,7 @@
 
 import { getRows } from './exports.js';
 import { getPhoto } from './photos.js';
+import { renderClusterMapJPEG } from './staticmap.js';
 
 const W = 612, H = 792; // US Letter, points
 const MARGIN = 48;
@@ -21,7 +22,7 @@ const MARGIN = 48;
 // Public entry: build the area-summary PDF for a filtered set of reports.
 // `meta` may carry { title, areaLabel }.
 // ---------------------------------------------------------------------------
-export function areaSummaryPDF(filters = {}, meta = {}) {
+export async function areaSummaryPDF(filters = {}, meta = {}) {
   const rows = getRows(filters);
   const doc = new Pdf();
 
@@ -67,32 +68,76 @@ export function areaSummaryPDF(filters = {}, meta = {}) {
   });
   y = chartTop - 3 * (barH + gap) - 8;
 
-  // --- Schematic local map of the cluster (vector scatter, no tiles) ---
+  // --- Local cluster map -----------------------------------------------------
+  // A real OpenStreetMap basemap of the cluster with the report points drawn on
+  // it by damage tier (green=Minimal, orange=Partial, red=Complete), matching the
+  // live dashboard. This map-image step is ADDITIVE and ISOLATED: if it fails for
+  // ANY reason (tiles unavailable, network issue, timeout, render error) the PDF
+  // still generates — falling back to the original schematic scatter below. A map
+  // failure must NEVER block or corrupt PDF generation.
   const located = rows.filter((r) => r.lat != null && r.lon != null);
-  doc.text(MARGIN, y, 'Cluster map (schematic — points by damage tier)', { size: 12, bold: true });
-  y -= 8;
   const mapH = 150, mapW = W - 2 * MARGIN;
-  const mapTop = y, mapBottom = y - mapH;
-  doc.rect(MARGIN, mapBottom, mapW, mapH, { stroke: GREY_LINE });
+
+  let mapImg = null;
   if (located.length) {
-    const lats = located.map((r) => r.lat), lons = located.map((r) => r.lon);
-    let minLat = Math.min(...lats), maxLat = Math.max(...lats);
-    let minLon = Math.min(...lons), maxLon = Math.max(...lons);
-    // pad so single-point / tight clusters still render sensibly
-    const padLat = (maxLat - minLat) * 0.15 || 0.0008;
-    const padLon = (maxLon - minLon) * 0.15 || 0.0008;
-    minLat -= padLat; maxLat += padLat; minLon -= padLon; maxLon += padLon;
-    const pad = 10;
-    located.forEach((r) => {
-      const px = MARGIN + pad + ((r.lon - minLon) / (maxLon - minLon)) * (mapW - 2 * pad);
-      const py = mapBottom + pad + ((r.lat - minLat) / (maxLat - minLat)) * (mapH - 2 * pad);
-      doc.dot(px, py, 4, TIER[r.damage_classification] || GREY);
-    });
-    doc.text(MARGIN + 6, mapBottom + 6, `${located.length} located • ${total - located.length} without coordinates`, { size: 8, color: GREY });
-  } else {
-    doc.text(MARGIN + 10, mapTop - mapH / 2, 'No located reports in this selection.', { size: 10, color: GREY });
+    try {
+      mapImg = await renderClusterMapJPEG(located, { aspect: mapW / mapH, timeoutMs: 8000 });
+    } catch (_) { mapImg = null; /* fall through to the schematic fallback */ }
   }
-  y = mapBottom - 24;
+
+  let mapDrawn = false;
+  if (mapImg) {
+    // Roll back to a clean state if anything below throws, so a failed map can
+    // never leave partial ops behind — the schematic then renders exactly as before.
+    const opMark = doc.ops.length, imgMark = doc.images.length, yMark = y;
+    try {
+      doc.text(MARGIN, y, 'Cluster map (OpenStreetMap basemap — points by damage tier)', { size: 12, bold: true });
+      const mapBottom = (y - 8) - mapH;
+      doc.image(mapImg.jpeg, mapImg.width, mapImg.height, MARGIN, mapBottom, mapW, mapH);
+      doc.rect(MARGIN, mapBottom, mapW, mapH, { stroke: GREY_LINE });
+      // Keep the "X located / Y without coordinates" note, on a light strip so it
+      // stays legible over the basemap.
+      const note = `${located.length} located - ${total - located.length} without coordinates`;
+      doc.rect(MARGIN + 4, mapBottom + 4, note.length * 4.4 + 8, 12, { fill: WHITE });
+      doc.text(MARGIN + 8, mapBottom + 6, note, { size: 8, color: GREY });
+      // OSM attribution (required by the tile usage policy).
+      const attr = mapImg.attribution || '(c) OpenStreetMap contributors';
+      const aw = attr.length * 4.4 + 8;
+      doc.rect(W - MARGIN - aw - 4, mapBottom + 4, aw, 12, { fill: WHITE });
+      doc.text(W - MARGIN - aw, mapBottom + 6, attr, { size: 8, color: GREY });
+      y = mapBottom - 24;
+      mapDrawn = true;
+    } catch (_) {
+      doc.ops.length = opMark; doc.images.length = imgMark; y = yMark; mapDrawn = false;
+    }
+  }
+
+  if (!mapDrawn) {
+    // Schematic fallback (vector scatter, no tiles) — unchanged from the original.
+    doc.text(MARGIN, y, 'Cluster map (schematic — points by damage tier)', { size: 12, bold: true });
+    y -= 8;
+    const mapTop = y, mapBottom = y - mapH;
+    doc.rect(MARGIN, mapBottom, mapW, mapH, { stroke: GREY_LINE });
+    if (located.length) {
+      const lats = located.map((r) => r.lat), lons = located.map((r) => r.lon);
+      let minLat = Math.min(...lats), maxLat = Math.max(...lats);
+      let minLon = Math.min(...lons), maxLon = Math.max(...lons);
+      // pad so single-point / tight clusters still render sensibly
+      const padLat = (maxLat - minLat) * 0.15 || 0.0008;
+      const padLon = (maxLon - minLon) * 0.15 || 0.0008;
+      minLat -= padLat; maxLat += padLat; minLon -= padLon; maxLon += padLon;
+      const pad = 10;
+      located.forEach((r) => {
+        const px = MARGIN + pad + ((r.lon - minLon) / (maxLon - minLon)) * (mapW - 2 * pad);
+        const py = mapBottom + pad + ((r.lat - minLat) / (maxLat - minLat)) * (mapH - 2 * pad);
+        doc.dot(px, py, 4, TIER[r.damage_classification] || GREY);
+      });
+      doc.text(MARGIN + 6, mapBottom + 6, `${located.length} located • ${total - located.length} without coordinates`, { size: 8, color: GREY });
+    } else {
+      doc.text(MARGIN + 10, mapTop - mapH / 2, 'No located reports in this selection.', { size: 10, color: GREY });
+    }
+    y = mapBottom - 24;
+  }
 
   // --- Two columns: infrastructure types + dominant hazard / time range ---
   const colY = y;
@@ -203,6 +248,7 @@ const TIER = { Minimal: [0.18, 0.49, 0.20], Partial: [0.98, 0.66, 0.14], Complet
 const GREY = [0.42, 0.45, 0.50];
 const GREY_LINE = [0.80, 0.84, 0.88];
 const BAR_BG = [0.93, 0.95, 0.97];
+const WHITE = [1, 1, 1];
 
 // ===========================================================================
 // Tiny PDF writer — text (Helvetica), rectangles, lines, dots, JPEG images.
