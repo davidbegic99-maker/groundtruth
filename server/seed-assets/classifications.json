@@ -1,0 +1,92 @@
+{
+  "1.jpg": {
+    "hazard": "Earthquake",
+    "ai_suggested_damage": "Partial",
+    "ai_confidence": 0.82,
+    "ai_damage_percentage": 45,
+    "ai_infrastructure_type": "Residential Infrastructure",
+    "ai_source": "live",
+    "rationale": "Extensive diagonal and map cracking with large plaster/render delamination across multiple elevations, exposed brick at parapet, and spalling around window openings consistent with ATC-20 YELLOW/Restricted (EMS-98 Grade 3–4), but no collapse of primary structural members or out-of-plumb story observ"
+  },
+  "2.jpg": {
+    "hazard": "Conflict",
+    "ai_suggested_damage": "Complete",
+    "ai_confidence": 0.91,
+    "ai_damage_percentage": 75,
+    "ai_infrastructure_type": "Residential Infrastructure",
+    "ai_source": "live",
+    "rationale": "Multiple full breaches of external wall/floor slabs with collapse of primary vertical and horizontal structural members at the corner bays, exposed interior voids, and widespread shrapnel spalling with blown-out window frames across several stories confirm collapse of primary structural elements con"
+  },
+  "3.jpg": {
+    "hazard": "Earthquake",
+    "ai_suggested_damage": "Partial",
+    "ai_confidence": 0.82,
+    "ai_damage_percentage": 35,
+    "ai_infrastructure_type": "Residential Infrastructure",
+    "ai_source": "live",
+    "rationale": "Visible diagonal and radiating crack patterns propagating across multiple bays of the facade between window openings indicate EMS-98 Grade 3 shear cracking consistent with ATC-20 YELLOW/Restricted, with no evidence of collapse or primary structural member failure."
+  },
+  "4.jpg": {
+    "hazard": "Wildfire",
+    "ai_suggested_damage": "Minimal",
+    "ai_confidence": 0.92,
+    "ai_damage_percentage": 2,
+    "ai_infrastructure_type": "Commercial Infrastructure",
+    "ai_source": "live",
+    "rationale": "All structural elements — masonry facade, columns, roofline, window frames, and parapets — appear fully intact with no visible heat deformation, charring, spalling, or collapse indicators consistent with wildfire damage."
+  },
+  "5.jpg": {
+    "hazard": "Hurricane / Cyclone",
+    "ai_suggested_damage": "Minimal",
+    "ai_confidence": 0.91,
+    "ai_damage_percentage": 5,
+    "ai_infrastructure_type": "Commercial Infrastructure",
+    "ai_source": "live",
+    "rationale": "The building facade shows no structural cracking, wall bowing, roof uplift, or foundation displacement — all window frames appear plumb and intact, roofline is horizontal, and no hurricane-related indicators such as waterline staining, wall-base erosion, or rebar exposure are visible."
+  },
+  "6.jpg": {
+    "hazard": "Earthquake",
+    "ai_suggested_damage": "Minimal",
+    "ai_confidence": 0.87,
+    "ai_damage_percentage": 2,
+    "ai_infrastructure_type": "Transport and Communication Infrastructure",
+    "ai_source": "live",
+    "rationale": "The tram, overhead catenary system, street furniture, and surrounding historic buildings all show horizontal roof lines, no cracking, no deformation of structural members, and intact windows/frames — consistent with ATC-20 GREEN/Inspected and no post-earthquake structural indicators."
+  },
+  "7.jpg": {
+    "hazard": "Flood",
+    "ai_suggested_damage": "Complete",
+    "ai_confidence": 0.85,
+    "ai_damage_percentage": 85,
+    "ai_infrastructure_type": "Residential Infrastructure",
+    "ai_source": "live",
+    "rationale": "Building is fully inundated with floodwater reaching wall-top level, the foundation is completely submerged indicating severe undermining, roof tiles show significant displacement and partial loss, windows are broken across multiple elevations, and dead standing trees confirm prolonged submersion co"
+  },
+  "8.jpg": {
+    "hazard": "Conflict",
+    "ai_suggested_damage": "Complete",
+    "ai_confidence": 0.97,
+    "ai_damage_percentage": 85,
+    "ai_infrastructure_type": "Residential Infrastructure",
+    "ai_source": "live",
+    "rationale": "Full collapse of the upper-floor roof/parapet across the central and corner bays, with primary vertical members destroyed and open sky visible through multiple breached structural sections, consistent with blast penetration and partial story collapse — ATC-20 RED / xBD Destroyed."
+  },
+  "9.jpg": {
+    "hazard": "Earthquake",
+    "ai_suggested_damage": "Complete",
+    "ai_confidence": 0.99,
+    "ai_damage_percentage": 95,
+    "ai_infrastructure_type": "Commercial Infrastructure",
+    "ai_source": "live",
+    "rationale": "Full partial collapse of upper floors with pancake/progressive story failure, complete loss of primary vertical and horizontal structural members, severe racking of entire wall bays, and massive debris field — consistent with ATC-20 RED/Unsafe, EMS-98 Grade 5, and xBD Destroyed."
+  },
+  "10.jpg": {
+    "hazard": "Earthquake",
+    "ai_suggested_damage": "Complete",
+    "ai_confidence": 0.95,
+    "ai_damage_percentage": 85,
+    "ai_infrastructure_type": "Residential Infrastructure",
+    "ai_source": "live",
+    "rationale": "Partial collapse of lower-story masonry walls with full section loss, collapsed roof/floor elements, and a large rubble pile of structural debris confirm ATC-20 RED/Unsafe and xBD Destroyed criteria."
+  }
+}

@@ -244,7 +244,7 @@ app.get('/api/photo/:hash', requireAnalyst, (req, res) => {
 });
 
 // Demo seeding for a fresh start (e.g. a brand-new deployment, or local first run).
-// This loads the 18-report demo dataset ONLY when the database is empty, and NEVER
+// This loads the 11-report demo dataset ONLY when the database is empty, and NEVER
 // wipes or overwrites existing reports — so a restart preserves everything that has
 // been submitted (important on a persistent disk where evaluators' reports must
 // survive). On by default; set SEED_ON_BOOT=0 (or false) to start completely empty.

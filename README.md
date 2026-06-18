@@ -338,7 +338,7 @@ All of these are optional — the prototype works fully without them.
 | `GT_PHOTO_KEY` | 32-byte AES key for photo encryption (hex, base64, or passphrase). |
 | `LIBRETRANSLATE_URL` | Enables server-side translation of free-text descriptions into English via a [LibreTranslate](https://libretranslate.com/) instance (open source, self-hostable, 50+ languages). |
 | `LIBRETRANSLATE_API_KEY` | API key for the LibreTranslate instance, if it requires one. |
-| `SEED_ON_BOOT` | Demo seeding at startup runs **by default** and loads the 18-report dataset **only when the database is empty** (never overwrites existing reports). Set to `0` (or `false`) to start completely empty. |
+| `SEED_ON_BOOT` | Demo seeding at startup runs **by default** and loads the 11-report dataset **only when the database is empty** (never overwrites existing reports). Set to `0` (or `false`) to start completely empty. |
 | `PORT` | Server port (default `3000`). |
 
 When LibreTranslate is configured, the original user text **and** an English
@@ -349,11 +349,20 @@ translation is simply skipped and the original text is kept — nothing breaks.
 
 ## 13. Demo data
 
-The dashboard ships with a purpose-built **18-report Istanbul dataset**: an earthquake
-cluster under the Sultanahmet footprints, scattered points across other hazards, four
-priority and three conflict cases, a 3-version building, and one landmark-only report
-with an **approximate, low-confidence coordinate** pinned near the cluster (it shows on
-the map flagged "approximate", demonstrating the landmark fallback without a stray pin).
+The dashboard ships with an **11-report Istanbul dataset built from real community
+photos** that were classified **once by the real Claude vision model** — so every photo
+report shows a genuine AI reading (`ai_source: live`), not the no-key placeholder. The
+compressed photos and the baked classifications live in `server/seed-assets/`, so
+reseeding reproduces the exact set offline (no AI call, no `seed-photos/` needed). All
+reports sit in the Sultanahmet cluster under the building footprints, with a spread of
+hazards (earthquake, flood, wildfire, hurricane/cyclone, conflict, civil unrest), four
+priority and three conflict cases, a 3-version building (Partial → Partial → Complete
+over three days), and one landmark-only report with an **approximate, low-confidence
+coordinate** pinned near the cluster (shown flagged "approximate", never a stray pin).
+
+> Regenerating the seed assets from new photos is a deliberate two-step build, run once:
+> `node scripts/compress-seed.mjs` (compress `seed-photos/*.jpg` → `server/seed-assets/`)
+> then `node --env-file=.env scripts/classify-seed.mjs` (classify them with the real AI).
 
 ### Seed-if-empty (automatic, safe)
 
@@ -364,7 +373,7 @@ set `SEED_ON_BOOT=0`.
 
 ### Manual reset (deliberate — return to a clean demo)
 
-To wipe everything and reload **exactly** the 18 demo reports — for example before
+To wipe everything and reload **exactly** the 11 demo reports — for example before
 recording the demo video, before handoff, or to clear stray test submissions — stop the
 server (`Ctrl+C`) and run:
 
@@ -416,9 +425,13 @@ server/
   pdf.js                Dependency-free PDF area-summary writer
   dedup.js              Post-sync AI deduplication (spatial/temporal/perceptual)
   translate.js          Optional LibreTranslate integration
+  seed.js               The demo dataset (single source of truth) + seeding helpers
+  seed-assets/          Committed demo photos + baked real-AI classifications.json
 scripts/
-  reset-demo.mjs        Manual reset: wipe + reload exactly the 18 demo reports (npm run seed:reset)
+  reset-demo.mjs        Manual reset: wipe + reload exactly the 11 demo reports (npm run seed:reset)
   seed-demo.mjs         Load the demo dataset over the live HTTP API (server must be running)
+  compress-seed.mjs     One-time build: compress seed-photos/ → server/seed-assets/
+  classify-seed.mjs     One-time build: classify the seed assets with the real AI
   make-test-jpeg.cjs    Generate a GPS-tagged test photo (dev fixture)
 ```
 

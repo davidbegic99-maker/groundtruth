@@ -6,24 +6,32 @@
 //                              database starts empty (e.g. Render free tier). Seeds
 //                              IN-PROCESS via insertSubmission — no HTTP self-call.
 //
-// THE DATASET — a purpose-built 18-report demonstration set, internally consistent so
-// it shows the app at its best:
-//   * AI values track the AI-SUGGESTED tier (Minimal ~5-18% / Partial ~40-65% /
-//     Complete ~80-97%, confidence rising with severity), never an implausible pairing.
-//   * A tight EARTHQUAKE cluster of 8 reports sits under the Sultanahmet building
-//     footprints around 41.008, 28.978 — enough to trigger the PDF auto-summary
-//     (>=5 within 200 m).
-//   * One building in that cluster is reported THREE times with escalating damage
-//     (Partial -> Partial -> Complete) to demonstrate version history.
-//   * Three believable AI/user conflicts (e.g. AI saw an intact facade, the resident
-//     knew the interior had collapsed) that flag under the widened conflict logic.
-//   * Four priority (people-in-danger) reports, all seven infrastructure types, and a
-//     spread of hazards (earthquake, flood, wildfire, cyclone, conflict, civil unrest).
+// THE DATASET — an 11-report demonstration set built from REAL community photos that
+// were classified ONCE by the REAL Claude vision model (scripts/classify-seed.mjs),
+// internally consistent so it shows the app at its best:
+//   * Every photo report carries the GENUINE AI reading for that exact image — tier,
+//     confidence, and analyst damage % — baked from server/seed-assets/classifications.json.
+//     These are real model results (ai_source:'live'), NOT the no-key mock placeholder.
+//   * All 11 reports sit in the Sultanahmet demo cluster (~41.008, 28.978, within ~150 m)
+//     under the building footprints — far more than the >=5-within-200 m the PDF area
+//     summary needs.
+//   * One building in that cluster is reported THREE times over three days with
+//     escalating damage (Partial -> Partial -> Complete) to demonstrate version history.
+//   * Three believable AI/user conflicts that flag under the widened conflict logic:
+//     two where the AI read an intact facade as Minimal but the resident knew the
+//     interior/rear had failed (Partial), and one where the AI over-read flooding as
+//     Complete but the structure was actually sound (Partial).
+//   * Four priority (people-in-danger) reports — including one Partial-tier flood, so
+//     priority is visibly independent of the damage tier.
+//   * A spread of hazards (earthquake, flood, wildfire, hurricane/cyclone, conflict,
+//     civil unrest) and five infrastructure types, as far as the photos honestly allow.
 //   * One landmark-only report with an APPROXIMATE, low-confidence coordinate pinned
-//     near the Sultanahmet cluster (no precise GPS) — it demonstrates the landmark
-//     fallback honestly: it shows on the map flagged "approximate", never at ~0,0.
-// Every AI suggestion is marked ai_source:'mock' so the analyst can tell this is demo
-// data (a prototype placeholder), not a live model result.
+//     near the cluster (no precise GPS, no photo, so no AI suggestion) — it demonstrates
+//     the landmark fallback honestly: shown on the map flagged "approximate", never ~0,0.
+//
+// REPRODUCIBLE + OFFLINE: the AI values are baked (read from the committed JSON) and the
+// photos are committed (server/seed-assets/*.jpg), so reseeding reproduces this exact set
+// WITHOUT calling the AI again and WITHOUT needing ./seed-photos at run time.
 
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -34,113 +42,106 @@ import { insertSubmission } from './submissions.js';
 import { runDedup } from './dedup.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const ASSET_DIR = join(__dirname, 'seed-assets');
 
-// Capture timestamps anchored to the 2026-06-15 Istanbul scenario (UTC).
+// Genuine per-photo AI classifications, produced ONCE by scripts/classify-seed.mjs
+// (the real Claude vision path) over the compressed photos. Loaded here so the AI
+// values on every report are exactly what the model returned — no transcription, no
+// re-classification at seed time.
+const AI = JSON.parse(readFileSync(join(ASSET_DIR, 'classifications.json'), 'utf8'));
+
+// Capture timestamps inside a believable active-crisis window: the 3-4 days before the
+// demo's "today" (2026-06-18), so the date filter is demonstrable and nothing is stale.
 const T = (day, h, m = 0) => new Date(Date.UTC(2026, 5, day, h, m, 0)).toISOString();
 
 // Object rows (clearer + safer than positional tuples for a set this detailed).
+//   photo        seed-assets filename; its baked AI reading is attached automatically
 //   lat/lon      decimal degrees, or null for the no-coordinate landmark report
 //   user         user-CONFIRMED damage tier (Minimal | Partial | Complete)
-//   ai           AI-SUGGESTED tier (drives conf/pct below); null = no AI suggestion
-//   conf/pct     ai_confidence (0..1) / ai_damage_percentage (0..100) — track `ai`
+//   hazard/infra Section 6 / Section 5 enums (infra is the human-confirmed type)
 //   people       people_in_danger (Yes | No | IDontKnow); Yes -> priority_flag
-//   q1/q2        optional crisis-specific answers (must match data.js option values)
-//   photo        attach the representative demo JPEG to this report
+//   q1/q2        optional crisis-specific answers (exact values from public/js/data.js)
 //   method/conf2/landmark/desc   location method, location_confidence, landmark, text
+//   device       seeds a distinct hashed device id; at = capture timestamp
+//
+// AI tier vs user tier per row (the conflict flag fires when they differ and the baked
+// AI confidence is >= 0.70):  CONFLICT rows are marked inline.
 export const DEMO_ROWS = [
-  // === EARTHQUAKE CLUSTER — Sultanahmet, under the demo footprints (~41.008, 28.978).
-  // First THREE rows are the SAME building (within the GPS match radius), versions 1-3
-  // with escalating damage and matching, increasing timestamps.
-  { lat: 41.00800, lon: 28.97800, hazard: 'Earthquake', infra: 'Residential Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.82, pct: 45, people: 'No', q1: 'Yes', q2: 'Open',
-    photo: true, device: 'A', at: T(15, 8) },
-  { lat: 41.00800, lon: 28.97800, hazard: 'Earthquake', infra: 'Residential Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.85, pct: 52, people: 'No', q1: 'Yes', q2: 'Blocked',
-    photo: false, device: 'B', at: T(15, 14) },
-  { lat: 41.00800, lon: 28.97800, hazard: 'Earthquake', infra: 'Residential Infrastructure',
-    user: 'Complete', ai: 'Complete', conf: 0.92, pct: 90, people: 'Yes', q1: 'Yes', q2: 'Blocked',
-    photo: true, device: 'C', at: T(16, 9),
-    desc: 'Returned the next morning — the upper floors have now pancaked. People still unaccounted for.' },
+  // === VERSIONED BUILDING — Sultanahmet, same coordinate, three versions over three
+  // days with escalating damage. Inserted in chronological order so version_number
+  // tracks the timeline. Each version is its own photo + genuine AI reading.
+  { photo: '3.jpg', lat: 41.00800, lon: 28.97800, hazard: 'Earthquake', infra: 'Residential Infrastructure',
+    user: 'Partial', people: 'No', q1: 'No', q2: 'Open', device: 'A', at: T(14, 9),
+    desc: 'Long diagonal cracks have opened across the front of the block since the first quake; residents are uneasy but still inside.' },
+  { photo: '1.jpg', lat: 41.00800, lon: 28.97800, hazard: 'Earthquake', infra: 'Residential Infrastructure',
+    user: 'Partial', people: 'No', q1: 'No', q2: 'Blocked', device: 'B', at: T(15, 16),
+    desc: 'Same building the next day — the cracks have widened and plaster is shedding from the upper floors; the stairwell is now blocked.' },
+  { photo: '9.jpg', lat: 41.00800, lon: 28.97800, hazard: 'Earthquake', infra: 'Residential Infrastructure',
+    user: 'Complete', people: 'Yes', q1: 'Yes', q2: 'Blocked', device: 'C', at: T(17, 8),
+    desc: 'Came back this morning — the building has pancaked. People are still unaccounted for under the debris.' },
 
-  // Other distinct buildings in the cluster (>30 m apart, so each is its own footprint).
-  { lat: 41.00850, lon: 28.97770, hazard: 'Earthquake', infra: 'Commercial Infrastructure',
-    user: 'Complete', ai: 'Partial', conf: 0.80, pct: 55, people: 'Yes', q1: 'Yes', q2: 'Blocked',
-    photo: true, device: 'A', at: T(15, 10),
-    desc: 'Shopfront looks intact from the street but the rear and roof have collapsed inward.' }, // CONFLICT
-  { lat: 41.00760, lon: 28.97830, hazard: 'Earthquake', infra: 'Government Building',
-    user: 'Minimal', ai: 'Minimal', conf: 0.88, pct: 12, people: 'No', q1: 'No', q2: 'Open',
-    photo: true, device: 'B', at: T(15, 11) },
-  { lat: 41.00830, lon: 28.97880, hazard: 'Earthquake', infra: 'Community Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.78, pct: 48, people: 'No', q1: 'Yes', q2: 'Open',
-    photo: false, device: 'C', at: T(15, 12) },
-  { lat: 41.00880, lon: 28.97850, hazard: 'Earthquake', infra: 'Public Spaces / Recreation Infrastructure',
-    user: 'Complete', ai: 'Complete', conf: 0.90, pct: 85, people: 'No', q1: 'No', q2: 'Blocked',
-    photo: true, device: 'A', at: T(15, 13) },
-  { lat: 41.00770, lon: 28.97760, hazard: 'Earthquake', infra: 'Utility Infrastructure',
-    user: 'Partial', ai: 'Minimal', conf: 0.83, pct: 15, people: 'No', q1: 'Yes', q2: 'Blocked',
-    photo: false, device: 'B', at: T(15, 15),
-    desc: 'Substation wall is bulging and one transformer bay has partly collapsed.' }, // CONFLICT
+  // === OTHER DISTINCT BUILDINGS in the cluster (each >30 m apart, so its own footprint).
+  // Shelled apartment tower — severe, people in danger (priority). AI Complete = user.
+  { photo: '2.jpg', lat: 41.00850, lon: 28.97770, hazard: 'Conflict', infra: 'Residential Infrastructure',
+    user: 'Complete', people: 'Yes', q1: 'Yes', q2: 'No', device: 'A', at: T(15, 11),
+    desc: 'A shell struck the corner of the apartment tower; the corner flats are gone and the stairwell is exposed. Families on the lower floors got out.' },
+  // Government records building the wildfire front passed — intact. AI Minimal = user.
+  { photo: '4.jpg', lat: 41.00760, lon: 28.97830, hazard: 'Wildfire', infra: 'Government Building',
+    user: 'Minimal', people: 'No', q1: 'Contained', q2: 'No', device: 'B', at: T(14, 13),
+    desc: 'The fire front passed along this street. The old government records building is sooty but structurally untouched — no cracks, roof intact.' },
+  // Bank facade intact from the street, but the windward rear/roof were torn off.
+  // CONFLICT: AI read the clean facade as Minimal; the resident confirmed Partial.
+  { photo: '5.jpg', lat: 41.00830, lon: 28.97880, hazard: 'Hurricane / Cyclone', infra: 'Commercial Infrastructure',
+    user: 'Partial', people: 'No', q1: 'Partially missing', q2: 'No', device: 'C', at: T(16, 10),
+    desc: 'From the street the bank facade looks fine, but the windward rear wall and part of the roof were torn off in the storm — the back offices are open to the sky.' },
+  // Tram station: street frontage intact, interior concourse roof partly down.
+  // CONFLICT: AI read the intact frontage as Minimal; staff confirmed Partial inside.
+  { photo: '6.jpg', lat: 41.00880, lon: 28.97850, hazard: 'Earthquake', infra: 'Transport and Communication Infrastructure',
+    user: 'Partial', people: 'No', q1: 'No', q2: 'Blocked', device: 'A', at: T(15, 14),
+    desc: 'The tram still runs and the street frontage looks intact, but inside the station the concourse roof has partly come down — staff have closed the platform.' },
+  // Flooded house — water has since receded; structurally sound. People were stranded
+  // (priority). CONFLICT: AI over-read the inundation as Complete; it is actually Partial.
+  { photo: '7.jpg', lat: 41.00770, lon: 28.97760, hazard: 'Flood', infra: 'Residential Infrastructure',
+    user: 'Partial', people: 'Yes', q1: 'Waist', q2: 'Yes', device: 'B', at: T(16, 7),
+    desc: 'Floodwater reached the windows and it looked destroyed, but the water has dropped and the walls and roof are sound — it can be saved once it dries. People were stranded on the roof earlier.' },
+  // Apartment block, top floors and roof collapsed — people likely home (priority).
+  { photo: '8.jpg', lat: 41.00820, lon: 28.97720, hazard: 'Conflict', infra: 'Residential Infrastructure',
+    user: 'Complete', people: 'Yes', q1: 'Yes', q2: 'No', device: 'C', at: T(17, 12),
+    desc: 'The top two floors of the building are gone and the roof has collapsed in; we think people were home when it was hit.' },
+  // Old masonry house collapsed into the lane — had been evacuated, so likely empty.
+  { photo: '10.jpg', lat: 41.00740, lon: 28.97870, hazard: 'Earthquake', infra: 'Residential Infrastructure',
+    user: 'Complete', people: 'No', q1: "I don't know", q2: 'Blocked', device: 'A', at: T(16, 18),
+    desc: 'Older masonry house at the edge of the square has collapsed into the lane; it had been evacuated after the first tremor, so we think it was empty.' },
 
-  // === SCATTERED REPORTS — other districts and hazards (the tool is context-agnostic).
-  // Kadikoy flood.
-  { lat: 40.99050, lon: 29.02900, hazard: 'Flood', infra: 'Transport and Communication Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.80, pct: 47, people: 'No', q1: 'Knee', q2: 'No',
-    photo: true, device: 'B', at: T(14, 8) },
-  { lat: 40.99300, lon: 29.03200, hazard: 'Flood', infra: 'Commercial Infrastructure',
-    user: 'Minimal', ai: 'Minimal', conf: 0.86, pct: 10, people: 'No', q1: 'Ankle', q2: 'Yes',
-    photo: false, device: 'C', at: T(14, 9) },
-  { lat: 40.98800, lon: 29.02500, hazard: 'Flood', infra: 'Residential Infrastructure',
-    user: 'Complete', ai: 'Partial', conf: 0.82, pct: 60, people: 'Yes', q1: 'Waist', q2: 'No',
-    photo: true, device: 'A', at: T(14, 16),
-    desc: 'Water only reached the ground floor but the building has shifted off its foundation.' }, // CONFLICT
-  // Wildfire.
-  { lat: 41.02500, lon: 28.97400, hazard: 'Wildfire', infra: 'Residential Infrastructure',
-    user: 'Complete', ai: 'Complete', conf: 0.95, pct: 92, people: 'Yes', q1: 'Active', q2: 'Yes',
-    photo: true, device: 'C', at: T(15, 18) },
-  { lat: 41.02700, lon: 28.97700, hazard: 'Wildfire', infra: 'Public Spaces / Recreation Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.80, pct: 44, people: 'No', q1: 'Contained', q2: 'No',
-    photo: false, device: 'A', at: T(15, 19) },
-  // Cyclone.
-  { lat: 40.97000, lon: 29.06000, hazard: 'Hurricane / Cyclone', infra: 'Community Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.78, pct: 50, people: 'No', q1: 'Partially missing', q2: 'No',
-    photo: false, device: 'B', at: T(14, 7) },
-  { lat: 40.96800, lon: 29.05700, hazard: 'Hurricane / Cyclone', infra: 'Utility Infrastructure',
-    user: 'Complete', ai: 'Complete', conf: 0.88, pct: 83, people: 'No', q1: 'Fully missing', q2: 'Yes',
-    photo: true, device: 'C', at: T(14, 17) },
-  // Conflict / civil unrest.
-  { lat: 41.04500, lon: 28.93000, hazard: 'Conflict', infra: 'Government Building',
-    user: 'Minimal', ai: 'Minimal', conf: 0.84, pct: 14, people: 'No', q1: 'No', q2: 'No',
-    photo: false, device: 'A', at: T(16, 11) },
-  { lat: 41.04600, lon: 28.93200, hazard: 'Civil Unrest', infra: 'Commercial Infrastructure',
-    user: 'Partial', ai: 'Partial', conf: 0.79, pct: 55, people: 'No', q1: 'Yes', q2: 'No',
-    photo: false, device: 'B', at: T(16, 12) },
-
-  // === LANDMARK-ONLY report — no precise GPS. Came in with only a landmark, pinned
-  // APPROXIMATELY near the Sultanahmet cluster (>30 m from the other footprints, so it
-  // is its own building) and flagged low-confidence so the analyst geocodes it later.
-  // It sits inside the 200 m cluster radius, so the area summary includes it honestly —
-  // shown on the map as an "approximate" point, never plotted at ~0,0.
-  { lat: 41.00900, lon: 28.97900, hazard: 'Earthquake', infra: 'Community Infrastructure',
-    user: 'Partial', ai: null, conf: null, pct: null, people: 'No',
-    photo: false, device: 'C', at: T(16, 10),
-    method: 'Landmark', conf2: 'low', landmark: 'Community clinic near Sultanahmet square (by the old fountain) — exact building to be geocoded',
-    desc: 'Sent by SMS — no GPS; pinned approximately near the reported landmark. Cracks across the clinic wall; please verify the exact location.' },
+  // === LANDMARK-ONLY report — no precise GPS, no photo (so no AI suggestion). Pinned
+  // APPROXIMATELY near the cluster (>30 m from the other footprints) and flagged
+  // low-confidence so the analyst geocodes it later. It sits inside the 200 m cluster
+  // radius, so the area summary includes it honestly — shown as "approximate", never ~0,0.
+  { lat: 41.00900, lon: 28.97900, hazard: 'Civil Unrest', infra: 'Community Infrastructure',
+    user: 'Partial', people: 'No', q1: 'No', q2: 'No', device: 'B', at: T(17, 15),
+    method: 'Landmark', conf2: 'low',
+    landmark: 'Community clinic near Sultanahmet square (by the old fountain) — exact building to be geocoded',
+    desc: 'Sent by SMS during the unrest — no GPS; pinned approximately near the landmark. Cracks across the clinic\'s front wall and a broken window; please verify the exact location.' },
 ];
 
-let cachedPhoto = null;
-function demoPhoto() {
-  if (cachedPhoto) return cachedPhoto;
-  const b64 = readFileSync(join(__dirname, '..', 'public', 'test-fixtures', 'gps-sample.jpg')).toString('base64');
-  cachedPhoto = { data: b64, mime: 'image/jpeg', width: 120, height: 90 };
-  return cachedPhoto;
+const photoCache = new Map();
+function seedPhoto(file) {
+  if (photoCache.has(file)) return photoCache.get(file);
+  const b64 = readFileSync(join(ASSET_DIR, file)).toString('base64');
+  const photo = { data: b64, mime: 'image/jpeg', width: null, height: null };
+  photoCache.set(file, photo);
+  return photo;
 }
 
 // Build the same payload shape the PWA posts to /api/submissions, so the dataset is
-// identical whether seeded over HTTP (the script) or in-process (boot).
+// identical whether seeded over HTTP (the script) or in-process (boot). Photo reports
+// carry the GENUINE baked AI reading for that image; the landmark report has none.
 export function buildPayload(r) {
+  const ai = r.photo ? AI[r.photo] : null;
+  if (r.photo && !ai) throw new Error(`No baked classification for ${r.photo} — re-run scripts/classify-seed.mjs`);
   return {
     submission_id: randomUUID(),
-    device_token: 'seed-' + r.device,
+    device_token: 'seed-' + (r.device || 'X'),
     timestamp: r.at,
     lat: r.lat, lon: r.lon,
     location_method: r.method || (r.lat == null ? 'Unknown' : 'LiveGPS'),
@@ -149,18 +150,19 @@ export function buildPayload(r) {
     hazard_type: r.hazard,
     infrastructure_type: r.infra,
     damage_classification: r.user,
-    ai_suggested_damage: r.ai,
-    ai_confidence: r.conf,
-    ai_damage_percentage: r.pct,
-    // Demo marker: the AI suggestion is a prototype placeholder (no live key), so the
-    // analyst detail panel labels it as such rather than passing it off as a live result.
-    ai_source: r.ai ? 'mock' : null,
+    ai_suggested_damage: ai ? ai.ai_suggested_damage : null,
+    ai_confidence: ai ? ai.ai_confidence : null,
+    ai_damage_percentage: ai ? ai.ai_damage_percentage : null,
+    // Genuinely classified by the live Claude vision model (scripts/classify-seed.mjs),
+    // so this is a real AI result — NOT the no-key mock placeholder. The mock label is
+    // reserved for true no-API-key fallback cases at submit time.
+    ai_source: ai ? 'live' : null,
     people_in_danger: r.people,
     dynamic_q1_answer: r.q1 || null,
     dynamic_q2_answer: r.q2 || null,
     description_text: r.desc || null,
     language_detected: 'en',
-    photos: r.photo ? [demoPhoto()] : [],
+    photos: r.photo ? [seedPhoto(r.photo)] : [],
   };
 }
 

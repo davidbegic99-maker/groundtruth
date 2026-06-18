@@ -1,6 +1,6 @@
 // MANUAL demo reset — deliberate, never automatic.
 //
-// Wipes ALL reports + photos and reloads exactly the 18-report demo dataset, in-process
+// Wipes ALL reports + photos and reloads exactly the 11-report demo dataset, in-process
 // (no running server required). This is how you return to a clean demo state — e.g.
 // before recording the demo video or before final handoff — and how you remove any
 // stray test submissions from a database.

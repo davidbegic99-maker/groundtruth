@@ -22,9 +22,9 @@ STEP 7 PROGRESS (this session)
                repo initialized and committed. Secrets/internal docs excluded from the
                repo (node_modules, server/data + photo key, the internal briefing, local
                Claude settings).
-               + SEED_ON_BOOT: a fresh deployment (empty DB) auto-loads the 18-report
+               + SEED_ON_BOOT: a fresh deployment (empty DB) auto-loads the 11-report
                  demo dataset on startup so evaluators see a populated map immediately —
-                 only when empty, never overwriting real data. Verified: seeds 18 with
+                 only when empty, never overwriting real data. Verified: seeds 11 with
                  dedup annotation on boot, skips on the next boot. render.yaml sets it.
                  Demo dataset is now single-source in server/seed.js (used by both the
                  boot seeder and scripts/seed-demo.mjs).
@@ -97,12 +97,14 @@ STEP 5 — Analyst dashboard: FULLY DONE AND VERIFIED IN THE BROWSER
   - Public data returns ONLY aggregated map "cells" (counts per damage level per
     area): 17 located reports collapsed into 10 cells, no individual records.
   - Analyst data is locked behind the access key: refused (401) without it,
-    returns all 18 full records with it. Photos, version history and filtering
+    returns all 11 full records with it. Photos, version history and filtering
     all answer correctly.
-  - A purpose-built 18-report Istanbul demo dataset is loaded (an earthquake cluster
-    under the Sultanahmet footprints plus scattered points across other hazards):
-    4 priority, 3 AI-conflict, one building with 3 versions, one report with no
-    location.
+  - An 11-report Istanbul demo dataset built from REAL community photos classified
+    ONCE by the real Claude vision model (ai_source: live, baked into
+    server/seed-assets) is loaded — all in the Sultanahmet cluster under the
+    footprints, with a spread of hazards (earthquake, flood, wildfire,
+    hurricane/cyclone, conflict, civil unrest): 4 priority, 3 AI-conflict, one
+    building with 3 versions, one approximate landmark-only report.
 
   Front-end (finished and checked in a real browser on 2026-06-11):
   - Public overview: Istanbul map with colour-coded aggregate cells, legend,

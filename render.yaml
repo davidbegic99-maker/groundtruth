@@ -33,7 +33,7 @@ services:
         value: undp-demo
       - key: GT_PHOTO_KEY
         generateValue: true
-      # Seed-if-empty runs by default (loads the 18-report demo set only when the DB is
+      # Seed-if-empty runs by default (loads the 11-report demo set only when the DB is
       # empty; never wipes real reports), so evaluators see a populated map immediately.
       # Left explicit here for clarity; set to "0" to start completely empty instead.
       - key: SEED_ON_BOOT

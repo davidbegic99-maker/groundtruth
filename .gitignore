@@ -4,6 +4,10 @@ server/data/
 .env
 .DS_Store
 
+# Raw, full-resolution seed photo originals (large). The demo ships the COMPRESSED
+# copies in server/seed-assets/ instead, so these are never needed at run time.
+seed-photos/
+
 # Internal strategy doc — not for a public repo (the app does not need it to run).
 # Remove this line if your repo is private and you want it tracked.
 GroundTruth_ClaudeCode_Briefing_v2.txt
