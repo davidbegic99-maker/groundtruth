@@ -338,7 +338,7 @@ All of these are optional — the prototype works fully without them.
 | `GT_PHOTO_KEY` | 32-byte AES key for photo encryption (hex, base64, or passphrase). |
 | `LIBRETRANSLATE_URL` | Enables server-side translation of free-text descriptions into English via a [LibreTranslate](https://libretranslate.com/) instance (open source, self-hostable, 50+ languages). |
 | `LIBRETRANSLATE_API_KEY` | API key for the LibreTranslate instance, if it requires one. |
-| `SEED_ON_BOOT` | Set to `1` to load the 18-report demo dataset at startup **only when the database is empty** (used by the Render Blueprint so a fresh deploy shows data). Never overwrites existing reports. |
+| `SEED_ON_BOOT` | Demo seeding at startup runs **by default** and loads the 18-report dataset **only when the database is empty** (never overwrites existing reports). Set to `0` (or `false`) to start completely empty. |
 | `PORT` | Server port (default `3000`). |
 
 When LibreTranslate is configured, the original user text **and** an English
@@ -349,22 +349,39 @@ translation is simply skipped and the original text is kept — nothing breaks.
 
 ## 13. Demo data
 
-To populate the dashboard with a purpose-built 18-report Istanbul dataset (an earthquake
-cluster under the Sultanahmet footprints, scattered points across other hazards, priority
-and conflict cases, a 3-version building, and one landmark-only report with no
-coordinate), start the server, then in a second terminal run:
+The dashboard ships with a purpose-built **18-report Istanbul dataset**: an earthquake
+cluster under the Sultanahmet footprints, scattered points across other hazards, four
+priority and three conflict cases, a 3-version building, and one landmark-only report
+with an **approximate, low-confidence coordinate** pinned near the cluster (it shows on
+the map flagged "approximate", demonstrating the landmark fallback without a stray pin).
+
+### Seed-if-empty (automatic, safe)
+
+You normally don't have to do anything: on startup the server **seeds the demo set only
+when the database is empty**. It **never wipes or overwrites** existing reports, so a
+restart preserves everything that has been submitted. To start completely empty instead,
+set `SEED_ON_BOOT=0`.
+
+### Manual reset (deliberate — return to a clean demo)
+
+To wipe everything and reload **exactly** the 18 demo reports — for example before
+recording the demo video, before handoff, or to clear stray test submissions — stop the
+server (`Ctrl+C`) and run:
 
 ```bash
-node scripts/seed-demo.mjs
+npm run seed:reset
 ```
 
-This **wipes** any existing reports and loads the curated demo set through the real
-submission pipeline (encrypted photos, hashed device IDs, versioning, conflict flags).
+Then `npm start` again. This is in-process (no running server needed) and is the only
+command that deletes data — it is never run automatically.
 
-**On a deployed instance** (where you can't easily run a script), set the
-`SEED_ON_BOOT=1` environment variable instead. The server then loads the same demo
-dataset on startup *only if the database is empty* — it never overwrites real reports.
-The included Render Blueprint (`render.yaml`) sets this for you.
+> To reset a **deployed** instance's database, run the same command there with
+> `GT_DB_PATH` pointing at that database file (and the same `GT_PHOTO_KEY`), e.g.
+> `GT_DB_PATH=/data/groundtruth.db npm run seed:reset`.
+
+The older `node scripts/seed-demo.mjs` (which seeds over the live HTTP API while the
+server is running) still works, but `npm run seed:reset` is the simpler, more reliable
+path.
 
 ---
 
@@ -400,7 +417,8 @@ server/
   dedup.js              Post-sync AI deduplication (spatial/temporal/perceptual)
   translate.js          Optional LibreTranslate integration
 scripts/
-  seed-demo.mjs         Load the demo dataset
+  reset-demo.mjs        Manual reset: wipe + reload exactly the 18 demo reports (npm run seed:reset)
+  seed-demo.mjs         Load the demo dataset over the live HTTP API (server must be running)
   make-test-jpeg.cjs    Generate a GPS-tagged test photo (dev fixture)
 ```
 

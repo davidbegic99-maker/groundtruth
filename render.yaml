@@ -33,7 +33,8 @@ services:
         value: undp-demo
       - key: GT_PHOTO_KEY
         generateValue: true
-      # Load the 18-report demo dataset on first boot (only when the DB is empty),
-      # so evaluators see a populated map immediately. Set to 0 to start empty.
+      # Seed-if-empty runs by default (loads the 18-report demo set only when the DB is
+      # empty; never wipes real reports), so evaluators see a populated map immediately.
+      # Left explicit here for clarity; set to "0" to start completely empty instead.
       - key: SEED_ON_BOOT
         value: "1"

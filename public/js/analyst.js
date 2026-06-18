@@ -481,7 +481,17 @@
     btn.disabled = true; btn.textContent = t('a.export.preparing');
     if (status) status.hidden = true;
     try {
-      const qs = currentFilters().toString();
+      const params = currentFilters();
+      // The PDF is an AREA summary (§13.3), not a full-dataset dump: scope it to the
+      // current map view so "X reports in this area" is geographically true and the
+      // cluster map stays tight (zoom to a cluster, then generate). The data exports
+      // (CSV/GeoJSON/GeoPackage) intentionally keep the full filtered set instead.
+      if (fmt === 'pdf' && map) {
+        const b = map.getBounds();
+        params.set('bbox', [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]
+          .map((n) => n.toFixed(6)).join(','));
+      }
+      const qs = params.toString();
       const url = `/api/export/${fmt}` + (qs ? '?' + qs : '');
       const r = await fetch(url, { headers: { 'x-analyst-key': analystKey } });
       if (!r.ok) throw new Error('export HTTP ' + r.status);

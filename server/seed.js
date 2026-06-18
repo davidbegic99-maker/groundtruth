@@ -19,8 +19,9 @@
 //     knew the interior had collapsed) that flag under the widened conflict logic.
 //   * Four priority (people-in-danger) reports, all seven infrastructure types, and a
 //     spread of hazards (earthquake, flood, wildfire, cyclone, conflict, civil unrest).
-//   * One landmark-only report with NO precise coordinate (the "1 without coordinates"
-//     in the PDF), to demonstrate the approximate-location data path.
+//   * One landmark-only report with an APPROXIMATE, low-confidence coordinate pinned
+//     near the Sultanahmet cluster (no precise GPS) — it demonstrates the landmark
+//     fallback honestly: it shows on the map flagged "approximate", never at ~0,0.
 // Every AI suggestion is marked ai_source:'mock' so the analyst can tell this is demo
 // data (a prototype placeholder), not a live model result.
 
@@ -114,13 +115,16 @@ export const DEMO_ROWS = [
     user: 'Partial', ai: 'Partial', conf: 0.79, pct: 55, people: 'No', q1: 'Yes', q2: 'No',
     photo: false, device: 'B', at: T(16, 12) },
 
-  // === LANDMARK-ONLY report — no precise coordinate (the "1 without coordinates" in the
-  // PDF). Came in with only a landmark to geocode later; approximate / low-confidence.
-  { lat: null, lon: null, hazard: 'Earthquake', infra: 'Community Infrastructure',
+  // === LANDMARK-ONLY report — no precise GPS. Came in with only a landmark, pinned
+  // APPROXIMATELY near the Sultanahmet cluster (>30 m from the other footprints, so it
+  // is its own building) and flagged low-confidence so the analyst geocodes it later.
+  // It sits inside the 200 m cluster radius, so the area summary includes it honestly —
+  // shown on the map as an "approximate" point, never plotted at ~0,0.
+  { lat: 41.00900, lon: 28.97900, hazard: 'Earthquake', infra: 'Community Infrastructure',
     user: 'Partial', ai: null, conf: null, pct: null, people: 'No',
     photo: false, device: 'C', at: T(16, 10),
-    method: 'Landmark', conf2: 'low', landmark: 'Community clinic next to the old fountain, Eminönü',
-    desc: 'Sent by SMS — no GPS. Cracks across the clinic wall; please verify location.' },
+    method: 'Landmark', conf2: 'low', landmark: 'Community clinic near Sultanahmet square (by the old fountain) — exact building to be geocoded',
+    desc: 'Sent by SMS — no GPS; pinned approximately near the reported landmark. Cracks across the clinic wall; please verify the exact location.' },
 ];
 
 let cachedPhoto = null;

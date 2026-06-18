@@ -243,21 +243,24 @@ app.get('/api/photo/:hash', requireAnalyst, (req, res) => {
   res.send(Buffer.from(p.data));
 });
 
-// Optional one-time demo seeding for fresh deployments where the database starts
-// empty (e.g. the Render free tier with an ephemeral disk). Set SEED_ON_BOOT=1 to
-// load the demo dataset ONLY when there are no reports yet — it never overwrites
-// real data. Off by default (local dev uses scripts/seed-demo.mjs instead).
+// Demo seeding for a fresh start (e.g. a brand-new deployment, or local first run).
+// This loads the 18-report demo dataset ONLY when the database is empty, and NEVER
+// wipes or overwrites existing reports — so a restart preserves everything that has
+// been submitted (important on a persistent disk where evaluators' reports must
+// survive). On by default; set SEED_ON_BOOT=0 (or false) to start completely empty.
+// To deliberately wipe and reload the clean demo set, use `npm run seed:reset`.
 const seedFlag = process.env.SEED_ON_BOOT;
-if (seedFlag && seedFlag !== '0' && seedFlag.toLowerCase() !== 'false') {
+const seedDisabled = seedFlag === '0' || (typeof seedFlag === 'string' && seedFlag.toLowerCase() === 'false');
+if (!seedDisabled) {
   try {
     const r = seedIfEmpty();
     console.log(
       r.skipped
-        ? `[seed-on-boot] skipped — ${r.count} report(s) already present`
-        : `[seed-on-boot] seeded ${r.seeded} demo reports (priority ${r.priority}, conflict ${r.conflict}, extra versions ${r.extraVersions})`
+        ? `[seed-if-empty] skipped — ${r.count} report(s) already present (not wiped)`
+        : `[seed-if-empty] empty database — seeded ${r.seeded} demo reports (priority ${r.priority}, conflict ${r.conflict}, extra versions ${r.extraVersions})`
     );
   } catch (e) {
-    console.warn('[seed-on-boot] failed:', e.message);
+    console.warn('[seed-if-empty] failed:', e.message);
   }
 }
 
